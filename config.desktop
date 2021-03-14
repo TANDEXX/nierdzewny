@@ -1,0 +1,15 @@
+#!/bin/nano
+# configuration of manage.sh script
+[output]
+# size of tabs in output
+tab-size = 2
+# yes: always color, auto: color if tty, no: never color
+color = auto
+
+[cache]
+# temporary directory
+dir = /tmp/nierdzewny
+
+[run]
+# arguments to pass with qemu (next to default arguments) (set it to "[EMPTY]" to ignored)
+qemu-args = [EMPTY]
