@@ -1,5 +1,6 @@
-# nierdzewny
-operating system writen in rust
+## about
+this is my operating system writen in rust.
+I writed this for fun but I am putting here some things that are better than linux things for me.
 
 ### build
 you need rust nightly to build project but this is installed by `manage.sh` script for unix & linux.
@@ -8,7 +9,7 @@ on windows you can build it but manually or writing own script if you known the 
 build it to bin file image using: `./manage.sh --ball --release`.
 
 ### running
-this is runned by script in qemu and cannot run in `virtualbox` because it generate `.bin` file.
+this is runned by script in qemu and cannot run in `virtualbox` because it generate `.bin` file for now.
 
 run it using: `./manage.sh --ball --run`.
 
