@@ -15,8 +15,8 @@ run it using: `./manage.sh --ball --run`.
 
 ### script
 this script is only for linux & unix. On Mac'os this doesn't work because this  script is writen in bash no sh.
-if rust nightly or recuied packages are not installed, then script will automatically install them (if you agree to that).
-script has configuration in `config.desktop` file, and it's easy to change that.
+if rust nightly or required packages are not installed, then script will automatically install them (if you agree to that).
+script has configuration in `config.desktop` file, and you can easily change that because before all keys are descriptions.
 
 ### licence
 this project is `open source` and original author is `TANDEX`.
