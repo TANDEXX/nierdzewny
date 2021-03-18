@@ -1,34 +1,61 @@
 #!/bin/nano
 #![no_std]
 #![no_main]
+#![feature(panic_info_message)]
+#![feature(abi_x86_interrupt)]
 
 pub mod vga;
 pub mod consts;
+pub mod util;
+pub mod proc;
+pub mod keyb;
+//pub mod device;
 
 use core::panic::PanicInfo;
 //use core::mem::transmute;
+use x86_64::instructions::{hlt, port::Port};
 use consts::auto::PANIC_COLOR;
 use consts::VGA;
 use vga::write_bytes;
+use util::str::Str;
 
 const WIDTH: isize = 80;
 const HEIGHT: isize = 25;
-const PANIC_MSG: &[u8] = b"System panic. Take a photo of screen and send it to tandex.english@gmail.com."; // massage cannot be longer than 78 characters
+const LINE: usize = 78;
+const PANIC_MSG: &[&[u8]] = &[
+
+	b"System panic. If you not triggered it then please take a photo of screen, send",
+	b"it to tandex.english@gmail.com and say more about that what you do. please",
+	b"check it do it panic if you do the same thing next times."
+
+]; // one line cannot be longer than 78 characters
 
 #[no_mangle]
-extern "C" fn _start() -> ! {
+extern "C" fn _start() -> ! { // entry point
 
-	write_bytes(b""); // write your displayed text here (following the terminal rulesin "doc/terminal.txt")
+	proc::exception::init();
 
-	loop {}
+	x86_64::instructions::interrupts::int3();
+	write_bytes(b"some text here\n"); // write your displayed text here (following the terminal rules in "doc/terminal.txt")
+
+	loop {
+
+		hlt();
+
+	}
 }
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
+
 	let mut pos = 80;
 	let vga = VGA as *mut u8;
 
 	unsafe {
+			let mut port4 = Port::new(0x3d4);
+			let mut port5 = Port::new(0x3d5);
+			port4.write(0x0au8);
+			port5.write(0x20u8);
 
 			*vga.offset(0) = 201;
 			*vga.offset(1) = PANIC_COLOR;
@@ -43,71 +70,60 @@ fn panic(info: &PanicInfo) -> ! {
 		*vga.offset(WIDTH * 2 - 2) = 187;
 		*vga.offset(WIDTH * 2 - 1) = PANIC_COLOR;
 
-		line_with(&mut pos, PANIC_MSG, vga);
+		for msg in PANIC_MSG {
 
-		for _ in 0..HEIGHT - 6 {
-
-			line_with(&mut pos, b"", vga);
+			line_with(&mut pos, msg, vga);
 
 		}
 
-/*		match info.message() {
+		for _ in 0..HEIGHT - 6 - (PANIC_MSG.len() as isize) {
+
+			line_with(&mut pos, &[], vga);
+
+		}
+
+		match info.message() {
 
 				Some(msg) => {
-					let mut buf = [32; 48];
 
-					buf[0] = b'm';
-					buf[1] = b'e';
-					buf[2] = b's';
-					buf[3] = b's';
-					buf[4] = b'a';
-					buf[5] = b'g';
-					buf[6] = b'e';
-					buf[7] = b':';
+					match msg.as_str() {
 
-					for (i, &byte) in msg.as_bytes().iter().enumerate() {
+						Some(msg) => {
+							let mut buffer = Str::from_bytes(b"message: ");
 
-						buf[i + 8] = byte;
+							buffer.push(msg.as_bytes());
+							line_with(&mut pos, &buffer.as_array::<LINE>(), vga);
+
+						},
+						None => {
+
+							line_with(&mut pos, b"message: <cannot get message as &'static str>", vga);
+
+						},
 
 					}
-
-					line_with(&mut pos, buf, vga);
 
 				},
 				None => {
 
-					line_with(&mut pos, b"message: <cannot get message information>", vga);
+					line_with(&mut pos, b"message: <message not found>", vga);
 
 				}
 
 			}
-*/
+
 		match info.payload().downcast_ref::<&'static str>() {
 
 			Some(pay) => {
-				let mut buf = [32; 48];
+				let mut buffer = Str::from_bytes(b"payload: ");
 
-				buf[0] = b'p';
-				buf[1] = b'a';
-				buf[2] = b'y';
-				buf[3] = b'l';
-				buf[4] = b'o';
-				buf[5] = b'a';
-				buf[6] = b'd';
-				buf[7] = b':';
-
-				for (i, &byte) in pay.as_bytes().iter().enumerate() {
-
-					buf[i + 8] = byte;
-
-				}
-
-				line_with(&mut pos, pay.as_bytes(), vga);
+				buffer.push(pay.as_bytes());
+				line_with(&mut pos, &buffer.as_array::<LINE>(), vga);
 
 			}
 			None => {
 
-				line_with(&mut pos, b"payload: <cannot get payload information>", vga);
+				line_with(&mut pos, b"payload: <payload not found>", vga);
 
 			}
 
@@ -116,22 +132,11 @@ fn panic(info: &PanicInfo) -> ! {
 		match info.location() {
 
 			Some(loc) => {
+				let mut buffer = Str::from_bytes(b"file: ");
+				let _ = loc.line();
 
-				let mut buf = [32; 45];
-
-				buf[0] = b'f';
-				buf[1] = b'i';
-				buf[2] = b'l';
-				buf[3] = b'e';
-				buf[4] = b':';
-
-				for (i, &byte) in loc.file().as_bytes().iter().enumerate() {
-
-					buf[i + 6] = byte;
-
-				}
-
-				line_with(&mut pos, &buf, vga);
+				buffer.push(loc.file().as_bytes());
+				line_with(&mut pos, &buffer.as_array::<LINE>(), vga);
 				line_with(&mut pos, b"line: <line in panic not supported yet>", vga);
 
 			},
@@ -159,7 +164,11 @@ fn panic(info: &PanicInfo) -> ! {
 
 	}
 
-	loop {}
+	loop {
+
+		hlt();
+
+	}
 }
 
 fn line_with(pos: &mut isize, line: &[u8], vga: *mut u8) {
@@ -196,16 +205,3 @@ fn line_with(pos: &mut isize, line: &[u8], vga: *mut u8) {
 	}
 
 }
-/*
-fn to_str(num: u32) -> [u8; 5] {
-	let mut buffer: [u8; 5] = [0; 5];
-
-	buffer[4] = (num % 10 + 48) as u8;
-	buffer[3] = (num % 100 - buffer[4] as u32 + 48) as u8;
-	buffer[2] = (num % 1000 - buffer[4] as u32 - buffer[3] as u32 + 48) as u8;
-	buffer[1] = (num % 10000 - buffer[4] as u32 - buffer[3] as u32 - buffer[2] as u32 + 48) as u8;
-	buffer[0] = (num % 100000 - buffer[4] as u32 - buffer[3] as u32 - buffer[2] as u32 - buffer[1] as u32 + 48) as u8;
-
-	buffer
-}
-*/

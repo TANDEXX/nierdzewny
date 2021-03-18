@@ -1,10 +1,11 @@
 #!/bin/nano
 #![allow(non_snake_case)]
 
-use crate::consts::auto;
-use auto::{WIDTH, HEIGHT, BUFFER_LEN};
-use crate::consts::VGA;
 use core::mem::transmute;
+use x86_64::instructions::{interrupts::without_interrupts, port::Port};
+use crate::consts::auto;
+use crate::consts::VGA;
+use auto::{WIDTH, HEIGHT, BUFFER_LEN};
 
 const REPLACER: u8 = b' ';
 const DEFAULT_COLOR: Color = Color(auto::DEFAULT_COLOR);
@@ -68,190 +69,195 @@ pub fn write_byte(byte: u8) {
 
 	unsafe {
 
-		while LOCK {}
+		without_interrupts(move || {
 
-		LOCK = true;
+			while LOCK {}
 
-		match &SETTING {
+			LOCK = true;
 
-			Type::Fg => {
+			match &SETTING {
 
-				CURRENTCOLOR = Color(hex_to_num(byte) + bits_from(CURRENTCOLOR.0, 3));
-				SETTING = Type::No;
+				Type::Fg => {
 
-			},
-			Type::Bg => {
+					CURRENTCOLOR = Color(hex_to_num(byte) + bits_from(CURRENTCOLOR.0, 3));
+					SETTING = Type::No;
 
-				CURRENTCOLOR = Color((hex_to_num(byte) * 16) + (CURRENTCOLOR.0 - bits_from(CURRENTCOLOR.0, 3)));
-				SETTING = Type::No;
+				},
+				Type::Bg => {
 
-			},
+					CURRENTCOLOR = Color((hex_to_num(byte) * 16) + (CURRENTCOLOR.0 - bits_from(CURRENTCOLOR.0, 3)));
+					SETTING = Type::No;
 
-			Type::BothColor => {
+				},
 
-				CURRENTCOLOR = Color(byte);
-				SETTING = Type::No;
+				Type::BothColor => {
 
-			},
+					CURRENTCOLOR = Color(byte);
+					SETTING = Type::No;
 
-			Type::DoNotCheck => {
+				},
 
-				write_vga_char(VgaChar{char: byte, color: CURRENTCOLOR.clone()});
-				SETTING = Type::DoNotCheck;
-
-			},
-
-			Type::No => {
-
-				if byte == 0 {
-
-					write_vga_char(VgaChar{char: 10, color: CURRENTCOLOR.clone()});
-
-				} else if byte == 1 {
-
-					CURPOS = SCREEN_POS * WIDTH;
-
-				} else if byte == 2 {
-
-					CURPOS = SCREEN_POS * WIDTH + VGA_SIZE - WIDTH;
-
-				} else if byte == 3 {
-
-					SETTING = Type::Fg;
-
-				} else if byte == 4 {
-
-					SETTING = Type::Bg;
-
-				} else if byte == 5 {
-
-					SETTING = Type::BothColor;
-
-				} else if byte == 6 {
-
-					for _ in 0..(CURPOS % WIDTH + 1) % 2 + 1 {
-
-						write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
-
-					}
-
-				} else if byte == 7 {
-
-					for _ in 0..(WIDTH - (CURPOS % WIDTH + 1)) % 4 + 1 {
-
-						write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
-
-					}
-
-				} else if byte == 8 {
-
-					for _ in 0..(WIDTH - (CURPOS % WIDTH) + 3) % 6 + 1 {
-
-						write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
-
-					}
-
-				} else if byte == 9 {
-
-					for _ in 0..(WIDTH - (CURPOS % WIDTH) + 7) % 8 + 1 {
-
-						write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
-
-					}
-
-				} else if byte == 10 {
-
-					for _ in 0..WIDTH - CURPOS % WIDTH {
-
-						write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
-
-					}
-
-				} else if byte == 12 {
-
-					if CURPOS + WIDTH < BUFFER_LEN {
-
-						CURPOS += WIDTH - CURPOS % WIDTH;
-
-					}
-
-				} else if byte == 13 {
-
-					CURPOS -= CURPOS % WIDTH;
-
-				} else if byte == 14 {
-
-					SETTING = Type::DoNotCheck;
-
-				} else if byte == 15 {
-
-					CURRENTCOLOR = HIGHTLIGHT_COLOR;
-
-				} else if byte == 16 {
-
-					CURRENTCOLOR = DEFAULT_COLOR;
-
-				} else if byte == 17 {
-
-					if CURPOS < BUFFER_LEN {
-
-						CURPOS += 1;
-
-					}
-
-				} else if byte == 18 {
-
-					if CURPOS != 0 {
-
-						CURPOS -= 1;
-
-					}
-
-				} else if byte == 19 {
-
-					if CURPOS >= WIDTH {
-
-						CURPOS -= WIDTH;
-
-					}
-
-				} else if byte == 20 {
-
-					if CURPOS + WIDTH < BUFFER_LEN {
-
-						CURPOS += WIDTH;
-
-					}
-
-				} else if byte == 24 {
-
-					CHANGE_CUR_POS = !CHANGE_CUR_POS;
-
-				} else if byte == 127 {
-
-					if CURPOS != 0 {
-						let ccp = CHANGE_CUR_POS.clone();
-
-						CHANGE_CUR_POS = false;
-						CURPOS -= 1;
-						write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
-						CHANGE_CUR_POS = ccp;
-
-					}
-
-				} else {
+				Type::DoNotCheck => {
 
 					write_vga_char(VgaChar{char: byte, color: CURRENTCOLOR.clone()});
+					SETTING = Type::No;
 
-				}
+				},
 
-			},
+				Type::No => {
 
-		}
+					if byte == 0 {
 
-		rewrite_vga();
+						write_vga_char(VgaChar{char: 10, color: CURRENTCOLOR.clone()});
 
-		LOCK = false;
+					} else if byte == 1 {
+
+						CURPOS = SCREEN_POS * WIDTH;
+
+					} else if byte == 2 {
+
+						CURPOS = SCREEN_POS * WIDTH + VGA_SIZE - WIDTH;
+
+					} else if byte == 3 {
+
+						SETTING = Type::Fg;
+
+					} else if byte == 4 {
+
+						SETTING = Type::Bg;
+
+					} else if byte == 5 {
+
+						SETTING = Type::BothColor;
+
+					} else if byte == 6 {
+
+						for _ in 0..(CURPOS % WIDTH + 1) % 2 + 1 {
+
+							write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
+
+						}
+
+					} else if byte == 7 {
+
+						for _ in 0..(WIDTH - (CURPOS % WIDTH + 1)) % 4 + 1 {
+
+							write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
+
+						}
+
+					} else if byte == 8 {
+
+						for _ in 0..(WIDTH - (CURPOS % WIDTH) + 3) % 6 + 1 {
+
+							write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
+
+						}
+
+					} else if byte == 9 {
+
+						for _ in 0..(WIDTH - (CURPOS % WIDTH) + 7) % 8 + 1 {
+
+							write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
+
+						}
+
+					} else if byte == 10 {
+
+						for _ in 0..WIDTH - CURPOS % WIDTH {
+
+							write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
+
+						}
+
+					} else if byte == 12 {
+
+						if CURPOS + WIDTH < BUFFER_LEN {
+
+							CURPOS += WIDTH - CURPOS % WIDTH;
+
+						}
+
+					} else if byte == 13 {
+
+						CURPOS -= CURPOS % WIDTH;
+
+					} else if byte == 14 {
+
+						SETTING = Type::DoNotCheck;
+
+					} else if byte == 15 {
+
+						CURRENTCOLOR = HIGHTLIGHT_COLOR;
+
+					} else if byte == 16 {
+
+						CURRENTCOLOR = DEFAULT_COLOR;
+
+					} else if byte == 17 {
+
+						if CURPOS < BUFFER_LEN {
+
+							CURPOS += 1;
+
+						}
+
+					} else if byte == 18 {
+
+						if CURPOS != 0 {
+
+							CURPOS -= 1;
+
+						}
+
+					} else if byte == 19 {
+
+						if CURPOS >= WIDTH {
+
+							CURPOS -= WIDTH;
+
+						}
+
+					} else if byte == 20 {
+
+						if CURPOS + WIDTH < BUFFER_LEN {
+
+							CURPOS += WIDTH;
+
+						}
+
+					} else if byte == 24 {
+
+						CHANGE_CUR_POS = !CHANGE_CUR_POS;
+
+					} else if byte == 127 {
+
+						if CURPOS != 0 {
+							let ccp = CHANGE_CUR_POS.clone();
+
+							CHANGE_CUR_POS = false;
+							CURPOS -= 1;
+							write_vga_char(VgaChar{char: REPLACER, color: CURRENTCOLOR.clone()});
+							CHANGE_CUR_POS = ccp;
+
+						}
+
+					} else {
+
+						write_vga_char(VgaChar{char: byte, color: CURRENTCOLOR.clone()});
+
+					}
+
+				},
+
+			}
+
+			rewrite_vga();
+			update_vga_cur();
+
+			LOCK = false;
+
+		});
 
 	}
 
@@ -338,6 +344,26 @@ fn write_vga_char(b: VgaChar) {
 		if CURPOS + WIDTH >= BUFFER_LEN {
 
 			down();
+
+		}
+
+	}
+
+}
+
+fn update_vga_cur() {
+
+	unsafe {
+
+		if SCREEN_POS * WIDTH <= CURPOS {
+			let mut port4 = Port::new(0x3d4);
+			let mut port5 = Port::new(0x3d5);
+
+
+			port4.write(0x0fu8);
+			port5.write(((CURPOS - SCREEN_POS * WIDTH) & 255) as u8);
+			port4.write(0x0eu8);
+			port5.write((((CURPOS - SCREEN_POS * WIDTH) >> 8) & 255) as u8);
 
 		}
 
