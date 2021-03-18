@@ -2,6 +2,9 @@
 this is my operating system writen in rust.
 I writed this for fun but I am putting here some things that are better than linux things for me.
 
+### first time
+when you downloaded this project then run `chmod +x PROJECT_DIR` because you need execute permitions on this project
+
 ### build
 you need rust nightly to build project but this is installed by `manage.sh` script for unix & linux.
 on windows you can build it but manually or writing own script if you known the `.bat` scripts.
