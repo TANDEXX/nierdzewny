@@ -2,12 +2,12 @@ terminal uses vga.
 to print characters just use vga::write_bytes to print byte array or vga::write_byte to print one byte (u8).
 but there are some control codes that you can use:
 0   - prints 10 byte
-1   - go to left up corner
-2   - go to right down corner
-3   - color fg using next hexadecimal character
-4   - color bg using next hexadecimal character
-5   - color bg & fg using next binary printed byte format
-6   - tab 2 characters
+1   - go to left up corner, home key
+2   - go to right down corner, end key
+3   - color fg using next hexadecimal character, pgUp
+4   - color bg using next hexadecimal character, pgDn
+5   - color bg & fg using next binary printed byte format, delete
+6   - tab 2 characters, insert
 7   - tab 4 characters
 8   - tab 6 characters
 9   - tab 8 characters
@@ -15,22 +15,22 @@ but there are some control codes that you can use:
 11  - none
 12  - end of line
 13  - to start of line
-14  - print next character to vga (do not check control codes)
-15  - set color to hightlight
-16  - reset color // TODO
+14  - print next character to vga (do not check control codes), f1
+15  - set color to hightlight, f2
+16  - reset color, f3
 17  - right
 18  - left
 19  - up
 20  - down
-21  - none
-22  - none
-23  - none
-24  - switch terminal type (do not change cursor position when printing)
-25  - switch terminal type (print key presses) // TODO
-26  - switch terminal type (buffering text) // TODO
-27  - none
-28  - none
-29  - none
-30  - none
+21  - character
+22  - none, f4
+23  - none, f5
+24  - switch terminal type (do not change cursor position when printing), f6
+25  - switch terminal type (print key presses) // TODO, f7
+26  - switch terminal type (buffering text) // TODO, f8
+27  - esc (while reading input)
+28  - none, f10
+29  - shift (while reading input) // TODO
+30  - alt (while reading input) // TODO
 31  - ctrl (while reading input) // TODO
-127 - go to right and remove right character
+127 - go to right and remove right character, backspace

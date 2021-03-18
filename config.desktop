@@ -13,3 +13,7 @@ dir = /tmp/nierdzewny
 [run]
 # arguments to pass with qemu (next to default arguments) (set it to "[EMPTY]" to ignored)
 qemu-args = [EMPTY]
+# delay to run vncviewer after qemu if the "--vnc" argument passed (don't set it to 0 because qemu needs some time to run vncserver)
+vncdelay = 1.5s
+# n: do nothing after vncviewer stopped, any other value (kill signal code) to kill qemu after vncviewer stopped
+kill-qemu = 2
