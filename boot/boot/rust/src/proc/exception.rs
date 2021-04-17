@@ -7,6 +7,7 @@ use x86_64::instructions::{segmentation::set_cs, tables::load_tss, port::Port};
 use x86_64::VirtAddr;
 use pic8259_simple::ChainedPics;
 use crate::vga::{write_bytes, write_byte};
+use crate::util;
 
 const INTERRUPT_STACK_SIZE: usize = 4096;
 const PIC1: u8 = 32;
@@ -23,6 +24,7 @@ static mut TSS_SELECT: SegmentSelector = unsafe {transmute([0u8; 2])};
 static mut PICS: ChainedPics = unsafe {transmute([0u8; 12])};
 static mut KEYBOARD: Port<u8> = unsafe {transmute([0u8; 2])};
 static mut STACK: [u8; INTERRUPT_STACK_SIZE] = [0; INTERRUPT_STACK_SIZE];
+pub static mut TRIPLE_FAULT: bool = false;
 
 pub fn init() {
 
@@ -70,6 +72,12 @@ extern "x86-interrupt" fn interupt(_sf: &mut InterruptStackFrame) {
 
 extern "x86-interrupt" fn double_interrupt(_: &mut InterruptStackFrame, _: u64) -> ! {
 
+	if unsafe {TRIPLE_FAULT} {
+
+		util::stack_overflow();
+
+	}
+
 	panic!("double fault");
 
 }
@@ -90,6 +98,20 @@ extern "x86-interrupt" fn keyboard(_: &mut InterruptStackFrame) {
 
 	unsafe {
 		let code = KEYBOARD.read();
+
+		if crate::PANICED {
+
+			if code == 25 {
+
+				crate::shutdown(false);
+
+			} else if code == 19 {
+
+				util::triple_fault();
+
+			}
+
+		}
 
 		crate::keyb::code::read(code);
 		PICS.notify_end_of_interrupt(PIC_KEYBOARD);
