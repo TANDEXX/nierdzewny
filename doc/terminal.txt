@@ -1,5 +1,6 @@
 terminal uses vga.
-to print characters just use vga::write_bytes to print byte array or vga::write_byte to print one byte (u8).
+this terminal uses default vga encoding, utf-8 will be in future.
+to print characters just use boot::vga::write_bytes to print byte array or boot::vga::write_byte to print one byte (u8).
 but there are some control codes that you can use:
 0   - prints 10 byte
 1   - go to left up corner, home key
@@ -23,7 +24,7 @@ but there are some control codes that you can use:
 19  - up
 20  - down
 21  - character
-22  - none, f4
+22  - set color to be before change, f4
 23  - none, f5
 24  - switch terminal type (do not change cursor position when printing), f6
 25  - switch terminal type (print key presses) // TODO, f7
