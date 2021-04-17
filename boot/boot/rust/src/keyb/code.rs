@@ -1,14 +1,34 @@
 #!/bin/nano
 
-static mut SPECIAL: bool = false;
+use core::mem::transmute;
+use crate::device::{State, STATE_NULL, write, new, defaults::KEY_INDEX as KEY};
 
+static mut SPECIAL: bool = false;
+static mut DEV_DESC: State = STATE_NULL;
+
+/// key definition structure
 pub struct Key {
 
+	/// what character it is
 	pub char: u8,
-	pub press: bool, // true if pressing, false if releasing
+	/// do it is pressed or released
+	/// true if pressing, false if releasing
+	pub press: bool,
 
 }
 
+/// init
+pub fn init() {
+
+	unsafe {
+
+		DEV_DESC = new(KEY);
+
+	}
+
+}
+
+/// transforming raw input to ascii and control codes
 pub fn read(input: u8) {
 	let mut press = true;
 	let mut input = input;
@@ -26,9 +46,9 @@ pub fn read(input: u8) {
 		k = match input {
 
 			8 => 30,
-			10 => 13,
-			31 => 31,
+			28 => 13,
 			29 => 29,
+			31 => 31,
 			56 => 30,
 			71 => 1,
 			72 => 19,
@@ -38,10 +58,10 @@ pub fn read(input: u8) {
 			80 => 20,
 			81 => 4,
 			79 => 2,
-			82 => 5,
-			83 => 6,
+			82 => 6,
+			83 => 5,
 			91 => 0,
-			_ => input
+			_ => 0,
 
 		};
 
@@ -120,6 +140,15 @@ pub fn read(input: u8) {
 
 	}
 
-	super::map::send(Key {char: k, press});
+	unsafe {
+
+		if !SPECIAL {
+
+			write(KEY, &mut DEV_DESC, k);
+			write(KEY, &mut DEV_DESC, transmute(press));
+
+		}
+
+	}
 
 }

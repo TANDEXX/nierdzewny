@@ -1,21 +1,27 @@
 #!/bin/nano
 
-use crate::vga::write_byte;
+//use crate::vga::write_byte;
 use crate::util::xor;
+//use crate::device::{State, write, new};
 use super::code::Key;
 
-pub fn send(key: Key) {
+/// pass key map
+pub fn pass(key: Key) -> u8 {
 
-	KEYMAP(key);
-
+	KEYMAP(key)
 }
 
-static KEYMAP: fn(Key) = default_keymap;
+/// current keymap
+static KEYMAP: fn(Key) -> u8 = default_keymap;
+/// shift is pressed
 static mut SHIFT: bool = false;
+/// alt is pressed
 static mut ALT: bool = false;
+/// capslock on
 static mut CAPSLOCK: bool = false;
 
-fn default_keymap(key: Key) {
+/// default keymap
+fn default_keymap(key: Key) -> u8 {
 	let mut code = key.char;
 	let big_letter: bool;
 
@@ -368,10 +374,15 @@ fn default_keymap(key: Key) {
 
 			if (code < 29 || code > 31) && code != 255 {
 
-				write_byte(code);
+				code
+			} else {
 
+				0
 			}
 
+		} else {
+
+			0
 		}
 
 	}
