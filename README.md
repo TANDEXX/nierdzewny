@@ -3,7 +3,7 @@ this is my operating system writen in rust.
 I writed this for fun but I am putting here some things that are better than linux things for me.
 
 ### first time
-when you downloaded this project then cd into project dir then run `chmod -R +x . && mkdir boot/boot/rust/.cargo && ln -s "\`pwd\`"/boot/boot/rust/config.toml boot/boot/rust/.cargo/config.toml` because you need execute permitions and fix one file position on this project
+when you downloaded this project then cd into project dir then run `chmod -R +x . && mkdir boot/boot/rust/.cargo && ln -s "$(pwd)"/boot/boot/rust/config.toml boot/boot/rust/.cargo/config.toml` because you need execute permitions and fix one file position on this project
 
 ### build
 you need rust nightly to build project but this is installed by `manage.sh` script for unix & linux.
