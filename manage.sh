@@ -80,6 +80,60 @@ cget() { # function imported from my unfinished (and not published) bash library
 
 }
 
+cline() {
+	state=0
+	space=0
+	at=1
+	buffer=""
+	name=""
+	args="$@"
+	len="${#args}"
+
+	while [ $at -le $len ]; do
+		char="`echo "$args" | cut -c$at-$at`"
+
+		if [ "$char" = '' ] || [ "$char" = ' ' ]; then
+
+			space=$(( $space + 1 ))
+
+		elif [ "$char" = '
+' ]; then
+			echo -n
+
+		elif [ "$char" = = ] && [ $state = 0 ]; then
+
+			name="$buffer"
+			buffer=""
+			state=1
+
+		else
+
+			if [ $state != 1 ]; then
+
+				for _ in `seq 1 $space`; do
+
+					buffer="$buffer "
+
+				done
+
+			else
+
+				state=2
+
+			fi
+
+			space=0
+			buffer+="$char"
+
+		fi
+
+		at=$(( $at + 1 ))
+	done
+
+	content="$buffer"
+
+}
+
 rod() {
 
 	read rodinput
@@ -180,11 +234,13 @@ b=0 # variables
 bboot=0
 bootconf=0
 run=0
+img=0
 release=0
 help=0
 abort=2
 vnc=0
 doc=0
+mod=0
 
 if [ -f "$conf" ] && [ -r "$conf" ]; then
 
@@ -234,6 +290,7 @@ if ! [ -d "$tmp" ]; then # set up tmp dir if not exist
 
 	mkdir -p "$tmp"
 	mkdir "$tmp/rust"
+	mkdir "$tmp/gen"
 
 fi
 
@@ -320,6 +377,10 @@ for arg in "$@"; do # argument check
 			b=1
 			bboot=1
 
+		elif [ "$arg" = --img ]; then
+
+			img=1
+
 		elif [ "$arg" = --boot-config ]; then
 
 			bootconf=1
@@ -331,6 +392,7 @@ for arg in "$@"; do # argument check
 		elif [ "$arg" = --run ]; then
 
 			run=1
+			img=1
 
 		elif [ "$arg" = --no-abort ]; then
 
@@ -351,6 +413,14 @@ for arg in "$@"; do # argument check
 		elif [ "$arg" = --doc ]; then
 
 			doc=1
+
+		elif [ "$arg" = --mods ]; then
+
+			mod=1
+
+		elif [ "$arg" = --mods-specify ]; then
+
+			mod=2
 
 		else
 
@@ -380,27 +450,318 @@ options:
 	--boot-config	let you configure boot while building
 	--release	build in release mode: some optimalizations, question you where place generated file
 	--run	runs system
-	--no-abort	no abort, system will run but version before failed building (should be not used)
+	--img	creates image file
+	--no-abort	no abort, for example system will run but version before failed building (should be not used)
 	--low-abort	no abort but only other things will run but system will not start
 	--abort	set abort level to default
 	--vnc	run vncviewer at :5900 port (use when qemu don't run it self)
-	--doc	build and show documentation in browser (TODO)
+	--doc	build and show documentation in browser
 	--clean clean project cache (out dir, boot/boot/rust/target dir) (TODO)
+	--mods	regenerate some files and link modules to boot. (Implement modules to boot)
+	--mods-specify	like \`--mods\` option but you specify what modules put and what to not put
 sequence:
-	functions, read confiuration, setup temporary dir, install needed packages, pass arguments, display help, create out dir if not exist, confiure boot, generate and show boot documentation, build & install
-	rust nightly if not installed, run in qemu
+	functions, read confiuration, setup temporary dir, install needed packages, pass arguments, display help, modules, confiure boot, generate and show boot documentation, build & install rust nightly if not installed, run in qemu
 "
 b=0
 run=0
 
 fi
 
-if ! [ -e out ]; then # create out dir if not exist
+if [ $mod != 0 ]; then
 
-	mkdir out
+	log 0 i 1 "passing modules"
+	log 1 i 1 "indexing modules"
+	mods_early_init=""
+	mods_shutdown=""
+	mods_init=""
+	mods_stop_machine=""
+	mods_keyboard_int=""
+	mods_timer_int=""
+	mods_reboot_machine=""
+	mods=""
+
+	for m in `ls boot/mods`; do
+		mod_init=false
+		mod_early_init=false
+		mod_shutdown=false
+		mod_stop_machine=false
+		mod_keyboard_int=false
+		mod_timer_int=false
+		mod_reboot_machine=false
+		include=true
+
+		while read line; do
+
+			cline "$line"
+
+			if [ "$name" = name ]; then
+
+				mod_name="$content"
+
+			elif [ "$name" = version ]; then
+
+				mod_ver="$content"
+
+			elif [ "$name" = include ]; then
+
+				if ! $content; then
+
+					include=false
+					break
+
+				fi
+
+			elif [ "$name" = desc ]; then
+
+				mod_desc="$content"
+
+			elif [ "$name" = functions ]; then
+
+				for fn in $content; do
+
+					if [ "$fn" = init ]; then
+
+						mod_init=true
+
+					elif [ "$fn" = early_init ]; then
+
+						mod_early_init=true
+
+					elif [ "$fn" = shutdown ]; then
+
+						mod_shutdown=true
+
+					elif [ "$fn" = stop_machine ]; then
+
+						mod_stop_machine=true
+
+					elif [ "$fn" = reboot_machine ]; then
+
+						mod_reboot_machine=true
+
+					elif [ "$fn" = keyboard_int ]; then
+
+						mod_keyboard_int=true
+
+					elif [ "$fn" = timer_int ]; then
+
+						mod_timer_int=true
+
+					else
+
+						log 2 w 1 "unknown function \"$fn\""
+
+					fi
+
+				done
+
+			else
+
+				log 2 w 1 "unknown key \"$name\""
+
+			fi
+
+		done < "boot/mods/$m/mod/meta.cfg"
+
+		if $include && [ $mod = 2 ]; then
+
+			log 2 q 0 "include \"$mod_name\": $mod_desc (yn)? "
+			inp="`rod y`"
+
+			if [ "$inp" = n ] || [ "$inp" = no ]; then
+
+				include=false
+
+			fi
+
+		fi
+
+		if $include; then
+
+			if $mod_init; then
+
+				mods_init+=" $m"
+
+			fi
+
+			if $mod_early_init; then
+
+				mods_early_init+=" $m"
+
+			fi
+
+			if $mod_shutdown; then
+
+				mods_shutdown+=" $m"
+
+			fi
+
+			if $mod_stop_machine; then
+
+				mods_stop_machine+=" $m"
+
+			fi
+
+			if $mod_reboot_machine; then
+
+				mods_reboot_machine+=" $m"
+
+			fi
+
+			if $mod_keyboard_int; then
+
+				mods_keyboard_int+=" $m"
+
+			fi
+
+			if $mod_timer_int; then
+
+				mods_timer_int+=" $m"
+
+			fi
+
+			mods+=" $m"
+
+		fi
+
+	done
+
+	log 1 i 1 "generating boot source file"
+	rm -rf boot/boot/rust/src/mods/built
+	mkdir boot/boot/rust/src/mods/built
+	srcf="boot/boot/rust/src/mods/built/mod.rs"
+
+	cat > "$srcf" <<EOF
+#!/bin/nano
+//! this file is automatically generated by \`manage.sh\` script. You should not edit this file, generate it by \`./manage.sh --mods\` or by \`./manage.sh --specify-mods\`
+
+EOF
+
+	chmod 775 "$srcf"
+
+	for m in $mods; do
+
+		echo "pub mod $m;" >> "$srcf"
+
+	done
+
+	cat >> "$srcf" <<EOF
+
+/// modules early init, first thing that boot do
+pub fn early_init() {
+
+EOF
+
+	for m in $mods_early_init; do
+
+		echo "	$m::early_init();" >> "$srcf"
+
+	done
+
+	cat >> "$srcf" <<EOF
+
+}
+
+/// modules init, initianize modules after most important things
+pub fn init() {
+
+EOF
+
+	for m in $mods_init; do
+
+		echo "	$m::init();" >> "$srcf"
+
+	done
+
+	cat >> "$srcf" <<EOF
+
+}
+
+/// modules shutdown, function called on system shutdown
+pub fn shutdown() {
+
+EOF
+
+	for m in $mods_shutdown; do
+
+		echo "	$m::shutdown();" >> "$srcf"
+
+	done
+
+	cat >> "$srcf" <<EOF
+
+}
+
+/// modules machine stop, function for shutdown system
+pub fn stop_machine() {
+
+EOF
+
+	for m in $mods_stop_machine; do
+
+		echo "	$m::stop_machine();" >> "$srcf"
+
+	done
+
+	cat >> "$srcf" <<EOF
+
+}
+
+/// modules machine reboot, function for reboot system
+pub fn reboot_machine() {
+
+EOF
+
+	for m in $mods_reboot_machine; do
+
+		echo "	$m::reboot_machine();" >> "$srcf"
+
+	done
+
+	cat >> "$srcf" <<EOF
+
+}
+
+/// modules keyboard interrupt, called when keyboard interrupt arrives, used for keyboard input
+pub fn keyboard_int() {
+
+EOF
+
+	for m in $mods_keyboard_int; do
+
+		echo "	$m::keyboard_int();" >> "$srcf"
+
+	done
+
+	cat >> "$srcf" <<EOF
+
+}
+
+/// modules timer interrupt, function called on timer interrupt
+pub fn timer_int() {
+
+EOF
+
+	for m in $mods_timer_int; do
+
+		echo "	$m::timer_int();" >> "$srcf"
+
+	done
+
+	cat >> "$srcf" <<EOF
+
+}
+EOF
+
+	log 1 i 1 "linking modules"
+
+	for m in $mods; do
+
+		ln -s "../../../../../mods/$m/src/" boot/boot/rust/src/mods/built/"$m"
+
+	done
 
 fi
-
 
 if [ $bootconf = 1 ]; then
 
@@ -528,19 +889,41 @@ if [ $b = 1 ]; then # build project
 
 	if [ $bboot = 1 ]; then # build boot
 
+		log 1 i 1 "building assembly boot part"
+
+		if ! nasm -f elf64 -o out/build/boot/boot/_entry.o boot/boot/asm/x86_64/entry.asm; then
+
+			if [ $abort = 2 ]; then
+
+				echo "boot build failed, aborting..."
+
+			else
+
+				echo "boot build failed"
+
+			fi
+
+			if [ $abort != 0 ]; then
+
+				img=0
+				run=0
+
+			fi
+
+		fi
+
 		if [ -e "$rh" ]; then
 
 			if [ "`"$rh/rustc" --version | grep nightly`" != "" ]; then
 
 				if [ $release = 0 ]; then
 
-					log 1 i 1 "building boot, cargo output:"
+					log 1 i 1 "building main (rust) boot part, cargo output:"
 					cd boot/boot/rust
-					if ~/.cargo/bin/cargo bootimage; then
+					if ~/.cargo/bin/cargo build; then
 
 						log 1 i 1 "build finished successfully"
 						cd ../../..
-						cp boot/boot/rust/target/target/debug/bootimage-boot.bin out/output.bin
 
 					else
 
@@ -555,6 +938,7 @@ if [ $b = 1 ]; then # build project
 
 							if [ "$abort" = 1 ]; then
 
+								img=0
 								run=0
 
 							fi
@@ -565,16 +949,13 @@ if [ $b = 1 ]; then # build project
 
 				else
 
-					log 1 i 1 "building boot, cargo output:"
+					log 1 i 1 "building main (rust) boot part, cargo output:"
 					cd boot/boot/rust
 
-					if "$rh"/cargo bootimage --release; then
+					if "$rh"/cargo build --release; then
 
 						log 1 i 1 "build finished succesfully"
 						cd ../../..
-						log 1 q 0 "where place generated output file (no ~ character)? "
-						read outputfile
-						cp boot/boot/rust/target/target/release/bootimage-boot.bin "$outputfile"
 
 					else
 
@@ -589,6 +970,7 @@ if [ $b = 1 ]; then # build project
 
 							if [ "$abort" = 1 ]; then
 
+								img=0
 								run=0
 
 							fi
@@ -613,26 +995,7 @@ if [ $b = 1 ]; then # build project
 
 					fi
 
-					log 1 q 0 "install rust automatically (yn)? "
-					read -e input
-
-					if [ "$input" = y ]; then
-
-						"$tmp/rust/rustup" --target thumbv7em-none-eabihf <<EOF
-y
-2
-
-nightly
-
-y
-1
-EOF
-
-					else
-
-						"$tmp/rust/rustup" --target thumbv7em-none-eabihf
-
-					fi
+					"$tmp/rust/rustup"
 
 				fi
 
@@ -651,51 +1014,84 @@ EOF
 
 				fi
 
-				log 1 q 0 "install automatically (yn)? "
-				read input
+				log 1 i 1 "please install rust nightly to run project"
+				"$tmp/rust/rustup.sh"
 
-				if [ "$input" = y ]; then
+			fi
 
-					"$tmp/rust/rustup.sh" --target thumbv7em-none-eabihf <<EOF
-2
+			exit
 
-nightly
+		fi
 
-y
-1
-EOF
+		log 1 i 1 "linking boot"
 
-				else
+		if [ $release = 1 ]; then
 
-					log 1 i 1 "please install rust nightly to run project"
-					"$tmp/rust/rustup.sh"
+			target=release
+
+		else
+
+			target=debug
+
+		fi
+
+		fail=false
+
+		if ! ld -o out/build/boot/complete-boot out/build/boot/boot/* boot/boot/rust/target/target/$target/libboot.a; then
+
+			fail=true
+
+		fi
+
+		if ! $fail; then
+
+			cp out/build/boot/complete-boot out/img/boot/nierdzewny-0.4
+
+		fi
+
+		if $fail; then
+
+			if [ "$abort" = 2 ]; then
+
+				log 1 e 1 "boot link failed. Aborting"
+				exit 1
+
+			else
+
+				log 1 e 1 "boot link failed"
+
+				if [ "$abort" = 1 ]; then
+
+					run=0
 
 				fi
 
 			fi
 
-			if ! [ -f "$rh/bootimage" ]; then
+		fi
 
-				log 1 q 0 "rust binary \"bootimage\" is not installed, install it (yn)? "
-				read -e input
+	fi
 
-				if [ $input = y ]; then
+fi
 
-					log 1 i 1 "cargo output:"
-					if "$rh/cargo" install bootimage; then
+if [ $img = 1 ]; then
 
-						log 1 i 1 "bootimage binary installed successfully"
+	log 0 i 1 "creating disk image"
 
-					else
+	if ! grub-mkrescue -o out/output.iso out/img; then
 
-						log 1 e 1 "bootimage binary installization failed. try again running: cargo install bootimage"
+		if [ "$abort" = 2 ]; then
 
-					fi
+			log 1 e 1 "disk image creation failed. Aborting"
+			exit 1
 
-				fi
+		else
 
-				log 1 i 1 "run script again"
-				exit
+			log 1 e 1 "disk image creation failed"
+
+			if [ "$abort" = 1 ]; then
+
+				run=0
 
 			fi
 
@@ -737,7 +1133,7 @@ EOF
 
 		if [ -n $outputfile ]; then
 
-			if qemu-system-x86_64 -drive format=raw,file=out/output.bin $qemuargs; then
+			if qemu-system-x86_64 -cdrom out/output.iso $qemuargs; then
 
 				log 1 i 1 "qemu ended successfully"
 
@@ -749,7 +1145,7 @@ EOF
 
 		else
 
-			if qemu-system-x86_64 -drive format=raw,file="$outputfile" "$qemuargs"; then
+			if qemu-system-x86_64 -cdrom "$outputfile" "$qemuargs"; then
 
 				log 1 i 1 "qemu ended successfully"
 
