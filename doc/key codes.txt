@@ -1,0 +1,48 @@
+raw keyboards key codes
+255 - left control
+254 - right control
+253 - left alt
+252 - right alt
+251 - left shift
+250 - right shift
+249 - meta / super
+248 - CapsLock
+247 - left arrow
+246 - right arrow
+245 - up arrow
+244 - down arrow
+243 - home
+242 - end
+241 - page up
+240 - page down
+239 - print screen
+238 - insert
+237 - delete
+236 - play / pause
+235 - play back
+234 - play next
+233 - f12
+232 - f11
+231 - f10
+230 - f9
+229 - f8
+228 - f7
+227 - f6
+226 - f5
+225 - f4
+224 - f3
+223 - f2
+222 - f1
+221 - num lock
+220 - scroll lock
+219 - numpad9
+218 - numpad8
+217 - numpad7
+216 - numpad6
+215 - numpad5
+214 - numpad4
+213 - numpad3
+212 - numpad2
+211 - numpad1
+210 - numpad0
+209 - numpadDOT
