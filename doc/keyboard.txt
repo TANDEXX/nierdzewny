@@ -1,2 +1,0 @@
-keyboard is imported to this system, you can type some text, you can enter all characters with shift and big part of characters with alt.
-Typing numbers (including '`' character) with shift + alt you can enter some frame characters in vga.
