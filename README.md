@@ -5,8 +5,8 @@ I write it for fun, but I have some interesting ideas to make
 ### first time
 Only on linux or mac, for windows `manage.py` script won't work properly.
 when you have downloaded this project, then go to this project directory and run:
-`chmod -R +x . && mkdir boot/boot/rust/.cargo && ln -s "$(pwd)"/boot/boot/rust/config.toml boot/boot/rust/.cargo/config.toml`
-This makes executable permitions for project and creates some symbolic links
+`chmod -R +x . && mkdir boot/boot/rust/.cargo && ln -s "$(pwd)"/boot/boot/rust/config.toml boot/boot/rust/.cargo/config.toml && mkdir -p out/build/boot/objects`
+This makes executable permitions for project and creates some directories
 
 ### build
 You need rust nightly for building this project
