@@ -18,7 +18,7 @@ _start:
 	mov ebp, stack_bottom
 
 	call clear_sc
-	jmp _start_continue ; I don't know do it is usefull
+	jmp _start_continue ; I don't know do this instruction is usefull
 
 _start_continue:
 	pushfd ; cpuid check
@@ -170,27 +170,6 @@ long_entry:
 
 	call main_entry
 
-outb: ; 1 8: data, 2 16: port
-	mov al, [rsp + 10]
-	mov dx, [rsp + 8]
-	out dx, al
-
-	ret
-
-outw: ; 1 16: data, 2 16: port
-	mov ax, [rsp + 10]
-	mov dx, [rsp + 8]
-	out dx, ax
-
-	ret
-
-outd: ; 1 32: data, 2 16: port
-	mov eax, [rsp + 10]
-	mov dx, [rsp + 8]
-	out dx, eax
-
-	ret
-
 bits 32
 section .data
 
@@ -198,7 +177,7 @@ stack_top equ 4fffh
 stack_bottom equ 4000h
 vga_end equ 0xb8fa0
 cseg equ gdt_code - gdt
-cpuid_err_msg db "processor does not support cpuid instruction (wrong processor)"
+cpuid_err_msg db "processor does not support cpuid (old processor)"
 cpuid_err_msg_len equ $ - cpuid_err_msg
 no_64_msg db "processor is 32-bit (wrong processor)"
 no_64_msg_len equ $ - no_64_msg

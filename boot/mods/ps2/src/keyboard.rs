@@ -36,7 +36,7 @@ static mut CURRENT_KEY_MAP: usize = 1;
 static mut CURRENT_KEY_MAP_LAYER: usize = 0;
 /// setted key mapping (default to `US QWERTY`)
 /// characters have u8 type too for defining do it is scan code for presing or releasing, (maybe in future it will have more uses)
-static KEY_MAP: /* mappings */ &'static [ /* mapping layers */ &'static [(&'static [(u8)], &'static [(u8, char)])]] = &[
+static KEY_MAP: /* mappings */ &'static [ /* mapping layers */ &'static [(&'static [u8], &'static [(u8, char)])]] = &[
 
 	&[],
 	&[
@@ -221,7 +221,7 @@ fn read() {
 
 				if get_scan && layer.1.len() > if CURRENT_KEY_MAP == 1 {input & 0b01111111} else {input} as usize {
 					let mut press = true;
-					let mut addr = if CURRENT_KEY_MAP == 1 && layer.1.len() <= input as usize {
+					let addr = if CURRENT_KEY_MAP == 1 && layer.1.len() <= input as usize {
 
 						if input & 0b10000000 != 0 {
 
@@ -234,7 +234,7 @@ fn read() {
 
 						input
 					};
-					let (mut attr, mut key) = layer.1[addr as usize];
+					let (attr, key) = layer.1[addr as usize];
 
 					if CURRENT_KEY_MAP != 1 {
 
@@ -245,13 +245,17 @@ fn read() {
 					CURRENT_KEY_MAP_LAYER = 0;
 
 					if key as u32 != 0 {
-						let column = input & 0b00000111;
-						let row = input & 0b11111000 >> 3;
+						let column = input & 0b11100000 >> 5; // TODO FIKSZ YT
+						let row = input & 0b00011111;
 
 						write_bytes(b"KBD character: "); // TODO complete
 						write_byte(key as u8);
 						write_bytes(b", press: ");
 						write_bytes(if press {b"true"} else {b"false"});
+						write_bytes(b", col: ");
+						write_bytes(Str::from_unsigned_num(column as u128).as_slice());
+						write_bytes(b", row: ");
+						write_bytes(Str::from_unsigned_num(row as u128).as_slice());
 						write_byte(10);
 
 					}
@@ -280,7 +284,7 @@ pub fn timer() {
 		} else {
 
 			if COMMANDS.len() != 0 && can_write() {
-				let mut comm = COMMANDS.head();
+				let comm = COMMANDS.head();
 
 //write_bytes(b"write to 0x60\n");
 
@@ -382,8 +386,12 @@ fn command_send(comm: u8, data: u8, send_data: bool) {
 
 		if !COMMANDS.full() {
 
-			COMMANDS.push(Command {comm, data, state: transmute::<bool, u8>(send_data) << 1, resend: 0});
-write_bytes(b"push\n");
+			match COMMANDS.push(Command {comm, data, state: transmute::<bool, u8>(send_data) << 1, resend: 0}) {
+
+				Ok(()) => {},
+				Err(()) => {},
+
+			};
 
 		}
 

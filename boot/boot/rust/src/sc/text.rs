@@ -2,7 +2,6 @@
 #![allow(non_snake_case)]
 
 //use core::mem::transmute;
-use x86_64::instructions::{interrupts::without_interrupts, port::Port};
 use crate::consts::auto::{DEFAULT_COLOR, HIGHTLIGHT_COLOR, WIDTH, HEIGHT, BUFFER_LEN};
 
 /// default replacer character

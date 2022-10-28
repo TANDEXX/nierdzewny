@@ -1,28 +1,32 @@
 ## about
 this is my operating system writen in rust.
-I writed this for fun but I am putting here some things that are better than linux things for me.
+I write it for fun, but I have some interesting ideas to make
 
 ### first time
-when you downloaded this project then cd into project dir then run `chmod -R +x . && mkdir boot/boot/rust/.cargo && ln -s "$(pwd)"/boot/boot/rust/config.toml boot/boot/rust/.cargo/config.toml` because you need execute permitions and fix one file position on this project
+Only on linux or mac, for windows `manage.py` script won't work properly.
+when you have downloaded this project, then go to this project directory and run:
+`chmod -R +x . && mkdir boot/boot/rust/.cargo && ln -s "$(pwd)"/boot/boot/rust/config.toml boot/boot/rust/.cargo/config.toml`
+This makes executable permitions for project and creates some symbolic links
 
 ### build
-you need rust nightly to build project but this is installed by `manage.sh` script for unix & linux.
-on windows you can build it but manually or writing own script if you known the `.bat` scripts.
+You need rust nightly for building this project
 
-build it to bin file image using: `./manage.sh --ball --release`.
+build it to bin file image using: `./manage.py -bi --release`.
 
 ### running
-this is runned by script in qemu and cannot run in `virtualbox` because it generate `.bin` file for now.
-
-run it using: `./manage.sh --ball --run`.
+run it using: `./manage.py -r`.
 
 ### script
-this script is only for linux & unix. On Mac'os this doesn't work because this  script is writen in bash no sh.
-if rust nightly or required packages are not installed, then script will automatically install them (if you agree to that).
-script has configuration in `config.desktop` file, and you can easily change that because before all keys are descriptions.
+`manage.py` script is writen for linux and maybe will work on mac'os, but won't work on windows.
 
 ### licence
 this project is `open source` and original author is `TANDEX`.
 
 ### name
 name is from Polish language meaning `stainless`. 
+
+### changing version
+If you are developing this system and want to change version:
+Change variable `boot_name` and version display function or someting in manage.py
+Then modify `out/img/boot/grub/grub.cfg` to pass boot name
+Also you can change version in `boot/boot/rust/Cargo.toml` (not neccesary)

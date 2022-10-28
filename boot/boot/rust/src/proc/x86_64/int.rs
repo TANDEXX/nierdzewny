@@ -52,7 +52,7 @@ pub extern "x86-interrupt" fn page_fault(_isf: &mut Isf) {
 pub extern "x86-interrupt" fn timer(_isf: &mut Isf) {
 
 	unsafe {
-		crate::mods::built::timer_int();
+		crate::mods::timer_int();
 
 //		write_bytes(b"T");
 
@@ -64,7 +64,7 @@ pub extern "x86-interrupt" fn timer(_isf: &mut Isf) {
 pub extern "x86-interrupt" fn keyboard(_isf: &mut Isf) {
 
 	unsafe {
-		crate::mods::built::keyboard_int();		
+		crate::mods::keyboard_int();
 
 //		write_bytes(b"K");
 

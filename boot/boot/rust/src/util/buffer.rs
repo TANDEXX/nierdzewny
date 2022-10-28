@@ -1,7 +1,5 @@
 #!/bin/nano
 
-use core::mem::transmute;
-
 #[repr(C)]
 pub struct Buffer<T: Clone, const LEN: usize> {
 

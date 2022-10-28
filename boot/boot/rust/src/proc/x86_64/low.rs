@@ -1,5 +1,7 @@
 #!/bin/nano
+#![allow(unused)]
 
+use core::arch::asm;
 use core::mem::{/*transmute, */size_of};
 
 const GDF_RING_POS: u64 = 45;
@@ -57,7 +59,6 @@ pub struct Idt {
 
 }
 
-#[derive(Clone)]
 #[repr(C, packed)]
 pub struct IdtEntry {
 

@@ -1,6 +1,7 @@
 #!/bin/nano
 #![allow(unused)]
 
+use core::arch::asm;
 use core::mem::transmute;
 use crate::consts::VGA_TEXT;
 use crate::outb;
