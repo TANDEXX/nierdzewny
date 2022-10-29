@@ -12,7 +12,6 @@ pub mod consts;
 #[macro_use]
 pub mod util;
 pub mod proc;
-pub mod device;
 pub mod mods;
 pub mod panic;
 pub mod fs;
@@ -27,9 +26,7 @@ pub extern "C" fn main_entry() -> ! {
 
 	mods::early_init();
 	sc::vga::disable_text_blink();
-//	proc::exception::init();
 	proc::carch::init();
-	device::init();
 	mods::init();
 	write_bytes(b"\x0fwelcome to the nierdzewny operating system :)\x10\n");
 
