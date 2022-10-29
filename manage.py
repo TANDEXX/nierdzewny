@@ -426,12 +426,17 @@ if cont and mods != "no":
 	realgenfile.write(genfile)
 	realgenfile.close()
 
-# building boot, assembly part
+# building boot, assembly part (entry)
 if cont and bboot:
 	print(log(0, "info", "building boot"))
 	print(log(1, "info", "building assembly part"))
 
 	cont = run_comm(["nasm", "-f", "elf64", "-o", ppath + "out/build/boot/entry.o", ppath + "boot/boot/asm/" + build_arch + "/entry.asm"], 2, "build failed, nasm exit code ")
+
+# building boot, assembly part (end)
+if cont and bboot:
+
+	cont = run_comm(["nasm", "-f", "elf64", "-o", ppath + "out/build/boot/end.o", ppath + "boot/boot/asm/" + build_arch + "/end.asm"], 2, "build failed, nasm exit code ")
 
 # copying proper rust target
 if cont and bboot:
@@ -464,6 +469,7 @@ if cont and bboot:
 		link_args.append(ppath + "out/build/boot/objects/" + object)
 
 	link_args.append(ppath + "boot/boot/rust/target/target/" + build_profile_dir + "/libboot.a")
+	link_args.append(ppath + "out/build/boot/end.o")
 	cont = run_comm(link_args, 2, "link failed, ld exit code ")
 
 	#ld -o out/build/boot/complete-boot out/build/boot/boot/* boot/boot/rust/target/target/$target/libboot.a

@@ -6,24 +6,15 @@
 /// tell compiler to try include it
 extern crate alloc;
 
-/// allocator
 pub mod boot_alloc;
-/// screen output
 pub mod sc;
-/// public constants
 pub mod consts;
-/// utility
 #[macro_use]
 pub mod util;
-/// processor manager
 pub mod proc;
-/// devices in /dev
 pub mod device;
-/// boot built modules
 pub mod mods;
-/// the panic functions
 pub mod panic;
-/// file systems implementation
 pub mod fs;
 
 //use core::mem::transmute;
@@ -37,7 +28,7 @@ pub extern "C" fn main_entry() -> ! {
 	mods::early_init();
 	sc::vga::disable_text_blink();
 //	proc::exception::init();
-	proc::x86_64::init();
+	proc::carch::init();
 	device::init();
 	mods::init();
 	write_bytes(b"\x0fwelcome to the nierdzewny operating system :)\x10\n");

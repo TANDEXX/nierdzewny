@@ -1,6 +1,7 @@
 bits 32
-global grub_header, _start, outb, outw, outd
-extern main_entry
+global grub_header, _start, load_addr
+extern main_entry, boot_end
+boot_start:
 
 section .text
 grub_header:
@@ -9,6 +10,21 @@ grub_header:
 	dd _start - grub_header ; header length
 	dd 0x100000000 - (0xe85250d6 + 0 + (_start - grub_header)) ; checksum
 
+;	I don't know how to make it work, and do it's usefull
+;	dw 2 ; addr info tag, 2 bytes
+;	dw 0 ; 2 bytes
+;	dd 2+2+4+4+4+4+4 ; 4 bytes
+;	dd grub_header ; 4 bytes
+;	dd -1 ; load addr, 4 bytes
+;	dd boot_end ; 4 bytes
+;	dd boot_end ; 4 bytes
+
+	dw 3 ; entry addr tag, 2 bytes
+	dw 0 ; 2 bytes
+	dd 2+2+4+4 ; 4 bytes
+	dd _start ; 4 bytes
+	dd 0 ; align, must be aligned by 8 bytes
+
 	dw 0
 	dw 0
 	dd 8
@@ -16,6 +32,8 @@ grub_header:
 _start:
 	mov esp, stack_top
 	mov ebp, stack_bottom
+
+;	jmp end
 
 	call clear_sc
 	jmp _start_continue ; I don't know do this instruction is usefull
@@ -173,13 +191,14 @@ long_entry:
 bits 32
 section .data
 
+load_addr equ 10000h
 stack_top equ 4fffh
 stack_bottom equ 4000h
 vga_end equ 0xb8fa0
 cseg equ gdt_code - gdt
 cpuid_err_msg db "processor does not support cpuid (old processor)"
 cpuid_err_msg_len equ $ - cpuid_err_msg
-no_64_msg db "processor is 32-bit (wrong processor)"
+no_64_msg db "processor is 32-bit, x86_64 cpu is needed"
 no_64_msg_len equ $ - no_64_msg
 
 gdt_desc:
