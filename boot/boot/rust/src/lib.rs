@@ -14,7 +14,6 @@ pub mod util;
 pub mod proc;
 pub mod mods;
 pub mod panic;
-pub mod fs;
 
 //use core::mem::transmute;
 use sc::text::write_bytes;
