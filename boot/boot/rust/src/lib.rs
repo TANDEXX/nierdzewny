@@ -9,7 +9,6 @@ extern crate alloc;
 pub mod boot_alloc;
 pub mod sc;
 pub mod consts;
-#[macro_use]
 pub mod util;
 pub mod proc;
 pub mod mods;

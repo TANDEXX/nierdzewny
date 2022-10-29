@@ -2,8 +2,9 @@
 
 use core::mem::transmute;
 use crate::{outb, inb};
-use crate::util::{buffer::Buffer, str::Str};
+use crate::util::{str::Str};
 use crate::sc::text::{write_byte, write_bytes};
+use crate::mods::core_lib::buffer::Buffer;
 use super::QUEUE_LEN;
 
 /// error code first
@@ -158,7 +159,6 @@ fn read() {
 
 			},
 			ACK => {
-				write_byte(b'a');
 				let comm = COMMANDS.head();
 
 				if comm.state & 0b1 != 0 || comm.state & 0b10 == 0 { // command send || do not send data
@@ -173,7 +173,6 @@ fn read() {
 
 			},
 			RESEND => {
-				write_byte(b'r');
 				let comm = COMMANDS.head();
 
 				comm.resend += 1;

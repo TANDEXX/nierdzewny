@@ -4,9 +4,9 @@
 /// string on stack
 pub mod str;
 /// fast buffer structure
-pub mod buffer;
+//pub mod buffer;
 /// string argument parser
-pub mod args;
+//pub mod args;
 /// most of macros
 //#[macro_use]
 //pub mod macros;
