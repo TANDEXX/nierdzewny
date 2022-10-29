@@ -3,7 +3,7 @@
 import sys, getopt, os, os.path, subprocess
 
 # constants to modify if you want or need to:
-boot_name = "nierdzewny-0.5"
+boot_name = "nierdzewny-0.6"
 tab_size = 2
 color_term = True # won't work on windows
 log_info_color = "0;1;34"
@@ -279,7 +279,7 @@ if cont and display_help:
 	print("	--run-term -t	run virtual machine in terminal")
 	print("	--run-gtk	run virtual machine in gtk window (default)")
 	print("	--run-vnc -v	start vnc viewer (vncviewer) when running virtual machine TODO")
-	print("	--clean	clean all builds TODO")
+	print("	--clean	clean all builds")
 	print("script running sequence:")
 	print("	building: boot")
 
@@ -289,7 +289,7 @@ if cont and display_help:
 # displaying version
 if cont and display_version:
 
-	print(term_color(regular_text_color) + "nierdzewny:	version 0.5, original author and currently only is `TANDEX` (name Jonatan), licence: `open source`")
+	print(term_color(regular_text_color) + "nierdzewny:	version 0.6, original author and currently only is `TANDEX` (name Jonatan), licence: `open source`")
 	print("manage.py script:	listed version is the same as nierdzewny, author the same too, licence: same as whole project")
 
 	cont = False

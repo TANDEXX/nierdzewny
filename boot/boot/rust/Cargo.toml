@@ -1,7 +1,7 @@
 #!/bin/nano
 [package]
 name = "boot"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["TANDEX"]
 edition = "2018"
 description = "rust (main) boot part for nierdzewny operating system"
