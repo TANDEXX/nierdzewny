@@ -28,7 +28,6 @@ pub static mut PANICED: bool = false;
 #[panic_handler]
 pub fn panic(info: &PanicInfo) -> ! {
 
-//	end_screen(info);
 
 	write_bytes(b"\nsystem panic: (msg: ");
 	match info.message() {Some(msg) => {match msg.as_str() {Some(msg) => write_bytes(msg.as_bytes()), None => write_bytes(b"MOH")}}, None => write_bytes(b"NO")}
@@ -38,8 +37,7 @@ pub fn panic(info: &PanicInfo) -> ! {
 	match info.location() {Some(loc) => {write_bytes(b"(file: ");write_bytes(loc.file().as_bytes());write_bytes(b", line: ");write_bytes(Str::from_unsigned_num(loc.line() as u128).as_slice());write_bytes(b"))\n");}, None => write_bytes(b"NO)\n")}
 
 	crate::mods::panic();
-
-	end_screen();
+//	end_screen(info);
 
 	end()
 }
