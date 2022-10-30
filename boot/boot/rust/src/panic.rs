@@ -37,6 +37,10 @@ pub fn panic(info: &PanicInfo) -> ! {
 	write_bytes(b", loc: ");
 	match info.location() {Some(loc) => {write_bytes(b"(file: ");write_bytes(loc.file().as_bytes());write_bytes(b", line: ");write_bytes(Str::from_unsigned_num(loc.line() as u128).as_slice());write_bytes(b"))\n");}, None => write_bytes(b"NO)\n")}
 
+	crate::mods::panic();
+
+	end_screen();
+
 	end()
 }
 
