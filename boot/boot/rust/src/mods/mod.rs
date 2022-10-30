@@ -35,6 +35,11 @@ pub fn reboot_machine() {
 
 }
 
+pub fn panic() {
+
+
+}
+
 pub fn timer_int() {
 
 	ps2::timer_int();

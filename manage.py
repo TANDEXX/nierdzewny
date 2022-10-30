@@ -312,7 +312,7 @@ if cont and clean != "no":
 # importing modules to boot
 glob_calls_fnn = [] # fn name
 glob_calls_mn = [] # mod name
-glob_calls_ufnn = ["early_init", "init", "shutdown", "stop_machine", "reboot_machine", "timer_int", "keyboard_int", "mouse_int"] # unique fn name
+glob_calls_ufnn = ["early_init", "init", "shutdown", "stop_machine", "reboot_machine", "panic", "timer_int", "keyboard_int", "mouse_int"] # unique fn name
 mods_name = []
 mods_desc = []
 if cont and mods != "no":

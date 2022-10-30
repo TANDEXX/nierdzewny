@@ -15,7 +15,7 @@ cpuio = "0.3.0"
 pic8259_simple = "0.2.0"
 
 [profile.dev]
-opt-level = 0
+opt-level = 2
 debug = true
 overflow-checks = false
 lto = false
