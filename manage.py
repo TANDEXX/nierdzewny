@@ -3,7 +3,7 @@
 import sys, getopt, os, os.path, subprocess
 
 # constants to modify if you want or need to:
-boot_name = "nierdzewny-0.6"
+boot_name = "nierdzewny-0.7"
 tab_size = 2
 color_term = True # won't work on windows
 log_info_color = "0;1;34"
