@@ -6,6 +6,7 @@ pub mod system_core;
 pub mod core_lib;
 pub mod ps2;
 pub mod vga_text;
+pub mod vga;
 
 pub fn early_init() {
 
@@ -16,6 +17,7 @@ pub fn early_init() {
 pub fn init() {
 
 	ps2::init();
+	vga::init();
 
 }
 

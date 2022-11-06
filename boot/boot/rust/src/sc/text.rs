@@ -119,7 +119,7 @@ pub fn write_bytes(bytes: &[u8]) {
 
 	for byte in bytes {
 
-		write_byte(*byte);
+//		write_byte(*byte);
 
 	}
 
@@ -387,7 +387,7 @@ fn rewrite_vga_char(charpos: usize) {
 	unsafe {
 		let pos = charpos - SCREEN_POS_VIRT * WIDTH;
 
-		TERM_WRITE(BUFFER[charpos].char, BUFFER[charpos].color, pos);
+//		TERM_WRITE(BUFFER[charpos].char, BUFFER[charpos].color, pos);
 
 	}
 
@@ -403,14 +403,14 @@ pub fn rewrite_vga() {
 
 		for char in &BUFFER[pos..if pos + SIZE >= BUFFER_LEN {BUFFER_LEN} else {pos + SIZE}] {
 
-			TERM_WRITE(char.char, char.color, vgapos);
+//			TERM_WRITE(char.char, char.color, vgapos);
 			vgapos += 1;
 
 		}
 
 		for _ in 0..SIZE - vgapos / 2 {
 
-			TERM_WRITE(b'.', 0xf, vgapos);
+//			TERM_WRITE(b'.', 0xf, vgapos);
 			vgapos += 1;
 
 		}
@@ -451,7 +451,7 @@ fn write_vga_char(b: VgaChar) {
 
 						SCREEN_POS += 1;
 						SCREEN_POS_VIRT = SCREEN_POS;
-						rewrite_vga();
+//						rewrite_vga();
 
 					}
 
@@ -462,7 +462,7 @@ fn write_vga_char(b: VgaChar) {
 			if (CURPOS % WIDTH == 0) && (CURPOS > SCREEN_POS_VIRT * WIDTH + SIZE - WIDTH) && (CURPOS < BUFFER_LEN - WIDTH) {
 
 				SCREEN_POS += 1;
-				rewrite_vga();
+//				rewrite_vga();
 
 			}
 
@@ -471,8 +471,8 @@ fn write_vga_char(b: VgaChar) {
 		if CURPOS >= BUFFER_LEN {
 
 			SCREEN_POS = MAX_SCREEN_POS;
-			down();
-			rewrite_vga();
+//			down();
+//			rewrite_vga();
 
 		}
 
