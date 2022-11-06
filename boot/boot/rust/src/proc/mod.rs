@@ -1,5 +1,5 @@
 #!/bin/nano
-//pub mod exception;
+//! module importing cpu support for currently compiled architecture
 
 /// processor support for x86_64
 pub mod x86_64;

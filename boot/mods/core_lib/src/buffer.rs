@@ -1,23 +1,27 @@
 #!/bin/nano
+//! variable buffering utility (to push on top and read from bottom)
 
 #[repr(C)]
-pub struct Buffer<T: Clone, const LEN: usize> {
+pub struct Buffer<T: Clone, const LENGTH: usize> {
 
-	buffer: [T; LEN],
+	buffer: [T; LENGTH],
 	start: usize,
 	end: usize,
 	zero: bool,
 
 }
 
-impl<T: Clone + Copy, const LEN: usize> Buffer<T, LEN> {
+impl<T: Clone + Copy, const LENGTH: usize> Buffer<T, LENGTH> {
 
+	/// create new buffer
 	pub const fn new(default: T) -> Self {
 
-		Buffer {buffer: [default; LEN], start: 0, end: 0, zero: true}
+		Buffer {buffer: [default; LENGTH], start: 0, end: 0, zero: true}
 	}
 
-	pub fn push(&mut self, v: T) -> Result<(), ()> /* Err on overflow */ {
+	/// pushes variable on top of buffer
+	/// outputs `Err(())` if overflowed
+	pub fn push(&mut self, v: T) -> Result<(), ()> {
 
 		if self.start != self.end || self.zero {
 
@@ -25,7 +29,7 @@ impl<T: Clone + Copy, const LEN: usize> Buffer<T, LEN> {
 			self.buffer[self.end] = v;
 			self.end += 1;
 
-			if self.end == LEN {
+			if self.end == LENGTH {
 
 				self.end = 0;
 
@@ -39,6 +43,8 @@ impl<T: Clone + Copy, const LEN: usize> Buffer<T, LEN> {
 
 	}
 
+	/// pops variable from bottom of buffer
+	/// outputs `None` if there are no variables
 	pub fn pop(&mut self) -> Option<T> {
 
 		if self.zero {
@@ -47,61 +53,58 @@ impl<T: Clone + Copy, const LEN: usize> Buffer<T, LEN> {
 		} else {
 			let result = self.buffer[self.start].clone();
 
-			self.start += 1;
-
-			if self.start == LEN {
-
-				self.start = 0;
-
-			}
-
-			if self.start == self.end {
-
-				self.zero = true;
-
-			}
+			self.reject_non_zero();
 
 			Some(result)
 		}
 	}
 
+	/// pops variable from bottom of buffer but doesn't return anything
 	pub fn reject(&mut self) {
 
 		if !self.zero {
 
-			self.start += 1;
-
-			if self.start == LEN {
-
-				self.start = 0;
-
-			}
-
-			if self.start == self.end {
-
-				self.zero = true;
-
-			}
+			self.reject_non_zero();
 
 		}
 
 	}
 
+	fn reject_non_zero(&mut self) {
+
+		self.start += 1;
+
+		if self.start == LENGTH {
+
+			self.start = 0;
+
+		}
+
+		if self.start == self.end {
+
+			self.zero = true;
+
+		}
+
+	}
+
+	/// returns variable from bottom of buffer without removing it
 	pub fn head(&mut self) -> &mut T {
 
 		&mut self.buffer[self.start]
 	}
 
+	/// says length of buffer
 	pub fn len(&self) -> usize {
 
 		if self.start > self.end {
 
-			LEN - self.start + self.end
+			LENGTH - self.start + self.end
 		} else {
 
 			if !self.zero && self.end == self.start {
 
-				LEN
+				LENGTH
 			} else {
 
 				self.end - self.start
@@ -109,18 +112,10 @@ impl<T: Clone + Copy, const LEN: usize> Buffer<T, LEN> {
 		}
 	}
 
+	/// says do buffer is full
 	pub fn full(&self) -> bool {
 
-		self.len() == LEN
+		self.len() == LENGTH
 	}
 
 }
-
-/*
-impl<T: Clone + Copy, const LEN: usize> core::opt::Index<usize> for Buffer<T, LEN> {
-	type Output = T;
-	fn index(&self, idx: usize) -> &Output {
-		
-	}
-}
-*/

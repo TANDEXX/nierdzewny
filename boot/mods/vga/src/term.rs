@@ -1,6 +1,7 @@
 #!/bin/nano
+//! very temporary terminal implementation
 
-use crate::mods::core_lib::term::buffer::{TermBuffer, Char};
+use crate::mods::core_lib::term::buffer::{TermBuffer};
 
 pub static mut TERM: TermBuffer<80, 50> = TermBuffer::new(25);
 

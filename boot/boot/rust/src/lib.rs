@@ -1,21 +1,18 @@
 #!/bin/nano
 #![no_std]
-#![feature(stmt_expr_attributes, panic_info_message, abi_x86_interrupt, exclusive_range_pattern, alloc_error_handler)]
 #![warn(unused)]
+#![feature(stmt_expr_attributes, panic_info_message, abi_x86_interrupt, exclusive_range_pattern, alloc_error_handler)]
+//! nierdzewny core
+
 
 /// tell compiler to try include it
 extern crate alloc;
 
 pub mod boot_alloc;
-//pub mod sc;
-pub mod consts;
-pub mod util;
 pub mod proc;
 pub mod mods;
-pub mod panic;
 
-//use core::mem::transmute;
-//use sc::text::write_bytes;
+use core::panic::PanicInfo;
 pub use proc::carch::{halt, end_exec as end, outb, outw, outd, inb, inw, ind};
 
 /// entry point of main system part
@@ -23,31 +20,36 @@ pub use proc::carch::{halt, end_exec as end, outb, outw, outd, inb, inw, ind};
 pub extern "C" fn main_entry() -> ! {
 
 	mods::early_init();
-//	sc::vga::disable_text_blink();
 	proc::carch::init();
 	mods::init();
 
 	end()
 }
 
+/// function which handles panic
+#[panic_handler]
+pub fn panic(_panic_info: &PanicInfo) -> ! {
+
+	mods::panic();
+
+	end()
+}
+
+/// function used to stop machine
 pub fn shutdown(reboot: bool) {
 
-//	unsafe {
+	mods::shutdown();
 
-		mods::shutdown();
+	if reboot {
 
-		if reboot {
+		mods::reboot_machine();
 
-			mods::reboot_machine();
+	} else {
 
-		} else {
+		mods::stop_machine();
 
-			mods::stop_machine();
+	}
 
-		}
-
-		end()
-
-//	}
+	end()
 
 }

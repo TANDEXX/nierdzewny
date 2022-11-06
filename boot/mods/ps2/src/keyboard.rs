@@ -1,9 +1,9 @@
 #!/bin/nano
+//! ps/2 keyboard driver, TODO complete this driver as it'sn't completed
+// temporary
+#![allow(unused)]
 
-use core::mem::transmute;
 use crate::{outb, inb};
-use crate::util::{str::Str};
-//use crate::sc::text::{write_byte, write_bytes};
 use crate::mods::core_lib::buffer::Buffer;
 use super::QUEUE_LEN;
 
@@ -75,40 +75,6 @@ static KEY_MAP: /* mappings */ &'static [ /* mapping layers */ &'static [(&'stat
 
 ];
 
-//static _KEY_MAP: &'static [&'static [&'static [(u8, char)]]] = &[
-
-//	&[
-
-//		&[
-//			Z, 27 as char,
-//			'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '+',
-//			8 /* tab */, '\t',
-//			'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']',
-//			'\n', 17, /* left control */
-//			'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
-//			16 /* left shift */, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/',
-//			2 /* right shift */, '*', 16 /* left alt */, ' ', 20 /* caps lock */,
-//			112, 113, 114, 115, 116, 117, 118, 119, 120, 121 /* f1-10 */, 144 /* number lock */, 145 /* scroll lock */,
-//			103, 104, 105 /* numpad 7-9 */, 109 /* numpad minus */, 100, 101, 102 /* numpad 4-6 */, 107 /* numpad + */, 97, 98, 99 /* numpad 1-3 */, 96 /* numpad 0 */, 190 /* numpad decimal */,
-//			122, 123 /* f11-12 */
-			// TODO "next" flag
-//		],
-
-//		&[
-//			Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, 177 /* previus track */,
-//			Z, Z, Z, Z, Z, Z, Z, Z, 176 /* next track */,
-//			Z, Z, b'\r' /* numpad enter */, 1 /* control */, Z, Z, 173 /* mute */, Z /* calculator, not supported */, 179 /* play */, Z, 178 /* stop pressed */,
-//			Z, Z, Z, Z, Z, Z, Z, Z, Z, 174 /* volume down */, Z, 175 /* volume up */, Z, Z /* www home, not supported */, Z, Z, 111 /* numpad divide */, Z, Z, 225 /* alt gr (right alt) */,
-//			Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, Z, 36 /* home */, Z /* cursor up, not supported */, 33 /* page up */, Z, Z /* cursor left, not supported */, Z, Z /* cursor right, not supported */, Z, 35 /* end */, Z /* cursor down, not supported */, 34 /* page 
-//			down*/, 45 /* insert */, 46 /* delete */
-//			Z, Z, Z, Z, Z, Z, Z, Z /* left gui, not supported */, Z /* right gui, not supported */, Z /* apps, not supported */, Z /* power, not suspported (TODO support this) */, 95 /* sleep */, Z, Z, Z, Z /* wake, not supported */, Z, Z, Z /* www search */, Z /* 
-//		www favorites */, 168 /* www favorites */, Z /* www stop, not supported */, Z /* www forwards, not supported */, Z /* www back, not supported */, Z /* my computer, not supported */, Z /* email, not supported */, Z /* media select, not supported */, Z, Z,
-//		],
-
-//	],
-
-//];
-
 #[derive(Clone, Copy)]
 struct Command {
 
@@ -124,7 +90,6 @@ pub fn interrupt() {
 
 	unsafe {
 
-//write_bytes(b"keyb interrupt\n");
 		if can_read() {
 
 			read();
@@ -147,13 +112,11 @@ fn read() {
 		match input {
 
 			ERR0 | ERR1 => {
-//				write_byte(b'E');
 
 				// TODO
 
 			},
 			ECHO => {
-//				write_byte(b'e');
 
 				// TODO
 
@@ -237,26 +200,16 @@ fn read() {
 
 					if CURRENT_KEY_MAP != 1 {
 
-						press = transmute(attr & 0b1);
+						press = attr & 0b1 != 0;
 
 					}
 
 					CURRENT_KEY_MAP_LAYER = 0;
 
 					if key as u32 != 0 {
-						let column = input & 0b11100000 >> 5; // TODO FIKSZ YT
-						let row = input & 0b00011111;
-/*
-						write_bytes(b"KBD character: "); // TODO complete
-						write_byte(key as u8);
-						write_bytes(b", press: ");
-						write_bytes(if press {b"true"} else {b"false"});
-						write_bytes(b", col: ");
-						write_bytes(Str::from_unsigned_num(column as u128).as_slice());
-						write_bytes(b", row: ");
-						write_bytes(Str::from_unsigned_num(row as u128).as_slice());
-						write_byte(10);
-*/
+
+						// here should be pressed key interpreted (key and press and key variables say about it)
+
 					}
 
 				}
@@ -385,7 +338,7 @@ fn command_send(comm: u8, data: u8, send_data: bool) {
 
 		if !COMMANDS.full() {
 
-			match COMMANDS.push(Command {comm, data, state: transmute::<bool, u8>(send_data) << 1, resend: 0}) {
+			match COMMANDS.push(Command {comm, data, state: (send_data as u8) << 1, resend: 0}) {
 
 				Ok(()) => {},
 				Err(()) => {},

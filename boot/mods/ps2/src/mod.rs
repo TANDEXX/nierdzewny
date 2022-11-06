@@ -1,6 +1,6 @@
 #!/bin/nano
 
-/// ps/2 keyboard (most used keyboard type)
+/// ps/2 keyboard
 pub mod keyboard;
 
 pub const QUEUE_LEN: usize = 8;
