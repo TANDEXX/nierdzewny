@@ -118,13 +118,9 @@ impl<T: Clone + Copy, const LEN: usize> Buffer<T, LEN> {
 
 /*
 impl<T: Clone + Copy, const LEN: usize> core::opt::Index<usize> for Buffer<T, LEN> {
-
 	type Output = T;
 	fn index(&self, idx: usize) -> &Output {
-
 		
-
 	}
-
 }
 */
