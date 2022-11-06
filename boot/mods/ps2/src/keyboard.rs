@@ -3,7 +3,7 @@
 use core::mem::transmute;
 use crate::{outb, inb};
 use crate::util::{str::Str};
-use crate::sc::text::{write_byte, write_bytes};
+//use crate::sc::text::{write_byte, write_bytes};
 use crate::mods::core_lib::buffer::Buffer;
 use super::QUEUE_LEN;
 
@@ -147,13 +147,13 @@ fn read() {
 		match input {
 
 			ERR0 | ERR1 => {
-				write_byte(b'E');
+//				write_byte(b'E');
 
 				// TODO
 
 			},
 			ECHO => {
-				write_byte(b'e');
+//				write_byte(b'e');
 
 				// TODO
 
@@ -246,7 +246,7 @@ fn read() {
 					if key as u32 != 0 {
 						let column = input & 0b11100000 >> 5; // TODO FIKSZ YT
 						let row = input & 0b00011111;
-
+/*
 						write_bytes(b"KBD character: "); // TODO complete
 						write_byte(key as u8);
 						write_bytes(b", press: ");
@@ -256,7 +256,7 @@ fn read() {
 						write_bytes(b", row: ");
 						write_bytes(Str::from_unsigned_num(row as u128).as_slice());
 						write_byte(10);
-
+*/
 					}
 
 				}

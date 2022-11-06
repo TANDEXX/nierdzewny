@@ -7,7 +7,7 @@
 extern crate alloc;
 
 pub mod boot_alloc;
-pub mod sc;
+//pub mod sc;
 pub mod consts;
 pub mod util;
 pub mod proc;
@@ -15,7 +15,7 @@ pub mod mods;
 pub mod panic;
 
 //use core::mem::transmute;
-use sc::text::write_bytes;
+//use sc::text::write_bytes;
 pub use proc::carch::{halt, end_exec as end, outb, outw, outd, inb, inw, ind};
 
 /// entry point of main system part
@@ -23,10 +23,9 @@ pub use proc::carch::{halt, end_exec as end, outb, outw, outd, inb, inw, ind};
 pub extern "C" fn main_entry() -> ! {
 
 	mods::early_init();
-	sc::vga::disable_text_blink();
+//	sc::vga::disable_text_blink();
 	proc::carch::init();
 	mods::init();
-	write_bytes(b"\x0fwelcome to the nierdzewny operating system :)\x10\n");
 
 	end()
 }
@@ -47,7 +46,6 @@ pub fn shutdown(reboot: bool) {
 
 		}
 
-		write_bytes(b"\x0fsystem still not stopped, force shutdown your pc or virtual machine.\x10\n");
 		end()
 
 //	}

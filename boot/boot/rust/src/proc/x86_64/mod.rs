@@ -10,7 +10,6 @@ use core::mem::transmute;
 use core::arch::asm;
 use pic8259_simple::ChainedPics as Pics;
 use low::{Gdt, Idt, Tss, IdtEntry, IntStackFrame as Isf, IO_DEFAULT as DIO};
-use crate::sc::text::write_bytes;
 
 const IDT_DEFAULT_NO_ENTRY: IdtEntry = IdtEntry::new(0, 0, low::IO_MINIMAL);
 

@@ -1,7 +1,6 @@
 #!/bin/nano
 
 use super::{low::{IntStackFrame as Isf}, PIC};
-use crate::sc::text::write_bytes;
 
 pub extern "x86-interrupt" fn div_zero(_isf: &mut Isf) {
 
@@ -10,7 +9,6 @@ pub extern "x86-interrupt" fn div_zero(_isf: &mut Isf) {
 
 pub extern "x86-interrupt" fn breakpoint(_isf: &mut Isf) {
 
-	write_bytes(b"breakpoint\n");
 
 }
 

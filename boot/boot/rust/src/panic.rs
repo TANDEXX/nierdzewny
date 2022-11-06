@@ -2,7 +2,7 @@
 
 use core::panic::PanicInfo;
 use crate::consts::auto::PANIC_COLOR;
-use crate::sc::{vga, vga::write_char, text::write_bytes};
+//use crate::sc::{vga, vga::write_char, text::write_bytes};
 use crate::util::str::Str;
 use crate::end;
 
@@ -29,12 +29,13 @@ pub static mut PANICED: bool = false;
 pub fn panic(info: &PanicInfo) -> ! {
 
 
-	write_bytes(b"\nsystem panic: (msg: ");
-	match info.message() {Some(msg) => {match msg.as_str() {Some(msg) => write_bytes(msg.as_bytes()), None => write_bytes(b"MOH")}}, None => write_bytes(b"NO")}
-	write_bytes(b", payl: ");
-	match info.payload().downcast_ref::<&'static str>() {Some(pay) => write_bytes(pay.as_bytes()), None => write_bytes(b"NO")}
-	write_bytes(b", loc: ");
-	match info.location() {Some(loc) => {write_bytes(b"(file: ");write_bytes(loc.file().as_bytes());write_bytes(b", line: ");write_bytes(Str::from_unsigned_num(loc.line() as u128).as_slice());write_bytes(b"))\n");}, None => write_bytes(b"NO)\n")}
+//	write_bytes(b"\nsystem panic: (msg: ");
+//	match info.message() {Some(msg) => {match msg.as_str() {Some(msg) => write_bytes(msg.as_bytes()), None => write_bytes(b"MOH")}}, None => write_bytes(b"NO")}
+//	write_bytes(b", payl: ");
+//	match info.payload().downcast_ref::<&'static str>() {Some(pay) => write_bytes(pay.as_bytes()), None => write_bytes(b"NO")}
+//	write_bytes(b", loc: ");
+//	match info.location() {Some(loc) => {write_bytes(b"(file: ");write_bytes(loc.file().as_bytes());write_bytes(b", line: ");write_bytes(Str::from_unsigned_num(loc.line() as u128).as_slice());write_bytes(b"))\n");}, None => 
+//write_bytes(b"NO)\n")}
 
 	crate::mods::panic();
 //	end_screen(info);
@@ -46,7 +47,7 @@ pub fn panic(info: &PanicInfo) -> ! {
 pub fn end_screen(info: &PanicInfo) {
 	let mut pos = 80;
 
-	unsafe {
+/*	unsafe {
 		vga::disable_cursor();
 		write_char(201, PANIC_COLOR, 0);
 
@@ -153,13 +154,13 @@ pub fn end_screen(info: &PanicInfo) {
 		PANICED = true;
 
 	}
-
+*/
 }
 
 /// function used to make line with text with this frame
 fn line_with(pos: &mut usize, line: &[u8]) {
 
-	write_char(186, PANIC_COLOR, *pos);
+/*	write_char(186, PANIC_COLOR, *pos);
 	*pos += 1;
 
 	for byte in line.iter() {
@@ -178,5 +179,5 @@ fn line_with(pos: &mut usize, line: &[u8]) {
 
 	write_char(186, PANIC_COLOR, *pos);
 	*pos += 1;
-
+*/
 }
