@@ -88,20 +88,29 @@ impl<const WIDTH: usize, const TOTAL_HEIGHT: usize> TermBuffer<WIDTH, TOTAL_HEIG
 				self.cursor_x += 1;
 			},
 			Return => {
+				self.color_line_rest();
 				self.cursor_x = 0;
 				self.cursor_y += 1;
+				self.color_line_rest();
 			},
-			SingleLineReturn => self.cursor_x = 0,
+			SingleLineReturn => {
+				self.color_line_rest();
+				self.cursor_x = 0;
+			},
 			BackSpace => if self.cursor_x != 0 {
 				self.cursor_x -= 1;
-				self.buffer[self.cursor_y][self.cursor_x] = Char::empty();
+				self.buffer[self.cursor_y][self.cursor_x] = Char::empty_colored(self.current_color);
 			},
 			Delete => {
-				self.buffer[self.cursor_y][self.cursor_x] = Char::empty();
+				self.buffer[self.cursor_y][self.cursor_x] = Char::empty_colored(self.current_color);
 				self.cursor_x += 1;
 			},
 			Tab => {
+				let old_cursor_x = self.cursor_x;
 				self.cursor_x = self.cursor_x / 8 * 8 + 8;
+				for a in old_cursor_x..self.cursor_x {
+					self.buffer[self.cursor_y][a].color = self.current_color.clone();
+				}
 			},
 			ChFgColor(color) => {
 				let mut color = color;
@@ -167,6 +176,17 @@ impl<const WIDTH: usize, const TOTAL_HEIGHT: usize> TermBuffer<WIDTH, TOTAL_HEIG
 
 			self.real_screen_pos -= cursor_screen;
 			self.user_screen_pos = self.real_screen_pos;
+
+		}
+
+	}
+
+	/// note that it only colors rest of line, it doesn't change any other values
+	fn color_line_rest(&mut self) {
+
+		for a in self.cursor_x..WIDTH {
+
+			self.buffer[self.cursor_y][a].color = self.current_color.clone();
 
 		}
 
@@ -259,9 +279,14 @@ impl Char {
 
 	pub const fn empty() -> Self {
 
+		Self::empty_colored(CharColor::default())
+	}
+
+	pub const fn empty_colored(color: CharColor) -> Self {
+
 		Char{
 			utf8_char: ' ',
-			color: CharColor::default(),
+			color,
 			attr: CharAttr::default(),
 		}
 	}
