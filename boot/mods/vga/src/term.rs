@@ -8,7 +8,7 @@ pub fn init() {
 
 	unsafe {
 
-		TERM.write_bytes(b"patolska gurom\n\ttak");
+		TERM.write_bytes(b"patolska [31;47mgurom\n\ttackf");
 
 	}
 
@@ -24,6 +24,7 @@ pub fn repaint() {
 		for char in TERM.iter() {
 
 			((753664 + a * 2) as * mut u8).write(char.utf8_char as u8);
+			((753665 + a * 2) as * mut u8).write(char.color.fg.0 | (char.color.bg.0 << 4));
 			a += 1;
 
 		}

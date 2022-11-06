@@ -11,8 +11,8 @@ pub enum TermOp {
 	Tab,
 	BackSpace,
 	Delete,
-	ChFgColor(BasicColor),
-	ChBgColor(BasicColor),
+	ChFgColor(Color),
+	ChBgColor(Color),
 	Bright,
 	Dark,
 	Italic,
@@ -32,44 +32,6 @@ pub enum TermOp {
 
 }
 
-#[repr(u8)]
-pub enum BasicColor {
-
-	Black,
-	Red,
-	Green,
-	Yellow,
-	Blue,
-	Violet,
-	Cyan,
-	White,
-
-}
-
-#[derive(Clone, Copy)]
-#[repr(u8)]
-pub enum FullColor {
-
-	Black,
-	Red,
-	Green,
-	Orange,
-	Blue,
-	Violet,
-	Cyan,
-	LightGrey,
-
-	DarkGrey,
-	LightRed,
-	LightGreen,
-	Yellow,
-	LightBlue,
-	Pink,
-	LightCyan,
-	White,
-
-}
-
 #[derive(Clone)]
 pub enum PassByteState {
 
@@ -81,47 +43,8 @@ pub enum PassByteState {
 
 }
 
-impl BasicColor {
-
-	fn from_byte(byte: u8) -> Option<Self> {
-		use BasicColor::*;
-
-		match byte {
-			b'0' => Some(Black),
-			b'1' => Some(Red),
-			b'2' => Some(Green),
-			b'3' => Some(Yellow),
-			b'4' => Some(Blue),
-			b'5' => Some(Violet),
-			b'6' => Some(Cyan),
-			b'7' => Some(White),
-			_ => None,
-		}
-	}
-
-	pub fn into_full_color(self, bright_bit: bool) -> FullColor {
-		// how to do it safely without transmute?
-		let mut result = unsafe {core::mem::transmute::<BasicColor, FullColor>(self)};
-
-		result.set_bright(bright_bit);
-
-		result
-	}
-
-}
-
-impl FullColor {
-
-	pub fn set_bright(&mut self, bright: bool) {
-		let mut self_u8 = self as * const _ as u8;
-
-		self_u8 |= (bright as u8) << 3;
-		// I don't know how to do it safely without transmute
-		*self = unsafe {core::mem::transmute(self_u8)};
-
-	}
-
-}
+#[derive(Clone, Copy)]
+pub struct Color (pub u8);
 
 impl PassByteState {
 
@@ -129,6 +52,58 @@ impl PassByteState {
 	pub const fn new() -> Self {
 
 		Self::Normal
+	}
+
+}
+
+impl Color {
+
+	pub const BLACK: Self =        Self(0b0000);
+	pub const BLUE: Self =         Self(0b0001);
+	pub const GREEN: Self =        Self(0b0010);
+	pub const CYAN: Self =         Self(0b0011);
+	pub const RED: Self =          Self(0b0100);
+	pub const VIOLET: Self =       Self(0b0101);
+	pub const ORANGE: Self =       Self(0b0110);
+	pub const BRIGHT_GREY: Self =  Self(0b0111);
+
+	pub const DARK_GREY: Self =    Self(0b1000);
+	pub const BRIGHT_BLUE: Self =  Self(0b1001);
+	pub const BRIGHT_GREEN: Self = Self(0b1010);
+	pub const BRIGHT_CYAN: Self =  Self(0b1011);
+	pub const BRIGHT_RED: Self =   Self(0b1100);
+	pub const PINK: Self =         Self(0b1101);
+	pub const YELLOW: Self =       Self(0b1110);
+	pub const WHITE: Self =        Self(0b1111);
+
+	pub const BRIGHT_BIT: u8 = 0b1000;
+
+	pub fn from_byte_code(byte: u8) -> Option<Self> {
+
+		match byte {
+			b'0' => Some(Self::BLACK),
+			b'1' => Some(Self::RED),
+			b'2' => Some(Self::GREEN),
+			b'3' => Some(Self::ORANGE),
+			b'4' => Some(Self::BLUE),
+			b'5' => Some(Self::VIOLET),
+			b'6' => Some(Self::CYAN),
+			b'7' => Some(Self::BRIGHT_GREY),
+			_ => None,
+		}
+	}
+
+	pub fn bright_bit(&self) -> u8 {
+
+		self.0 & 0b1000
+	}
+
+	/// if you want to set bright bit manualy, then enter BRIGHT_BIT constant or zero depending on what you want to set
+	pub fn combine_bright_bit(&mut self, bright_bit: u8) {
+
+		self.0 &= 0b0111;
+		self.0 |= bright_bit;
+
 	}
 
 }
@@ -153,11 +128,11 @@ pub fn pass_byte(state: &mut PassByteState, byte: u8) -> TermOp {
 				b'9' => TermOp::StrikeThrough,
 				_ => TermOp::Nothing,
 			},
-			b'3' => match BasicColor::from_byte(sec_byte) {
+			b'3' => match Color::from_byte_code(sec_byte) {
 				Some(color) => TermOp::ChFgColor(color),
 				None => TermOp::Nothing,
 			},
-			b'4' => match BasicColor::from_byte(sec_byte) {
+			b'4' => match Color::from_byte_code(sec_byte) {
 				Some(color) => TermOp::ChBgColor(color),
 				None => TermOp::Nothing,
 			},

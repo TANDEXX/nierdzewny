@@ -1,6 +1,6 @@
 #!/bin/nano
 
-use super::basic::{TermOp, BasicColor, FullColor, PassByteState, pass_byte};
+use super::basic::{TermOp, Color, PassByteState, pass_byte};
 
 pub struct TermBuffer<const WIDTH: usize, const TOTAL_HEIGHT: usize> {
 
@@ -40,11 +40,11 @@ pub struct Char {
 pub struct CharColor {
 
 	/// foreground color (text color)
-	pub fg: FullColor,
+	pub fg: Color,
 	/// background color
-	pub bg: FullColor,
+	pub bg: Color,
 	/// this defines color for cursor, underscore, etc
-	pub special: FullColor,
+	pub special: Color,
 
 }
 
@@ -87,7 +87,63 @@ impl<const WIDTH: usize, const TOTAL_HEIGHT: usize> TermBuffer<WIDTH, TOTAL_HEIG
 				self.buffer[self.cursor_y][self.cursor_x] = Char::create(self.current_color.clone(), self.current_attr.clone(), character);
 				self.cursor_x += 1;
 			},
-			_ => {},
+			Return => {
+				self.cursor_x = 0;
+				self.cursor_y += 1;
+			},
+			SingleLineReturn => self.cursor_x = 0,
+			BackSpace => if self.cursor_x != 0 {
+				self.cursor_x -= 1;
+				self.buffer[self.cursor_y][self.cursor_x] = Char::empty();
+			},
+			Delete => {
+				self.buffer[self.cursor_y][self.cursor_x] = Char::empty();
+				self.cursor_x += 1;
+			},
+			Tab => {
+				self.cursor_x = self.cursor_x / 8 * 8 + 8;
+			},
+			ChFgColor(color) => {
+				let mut color = color;
+				color.combine_bright_bit(self.current_color.fg.bright_bit());
+				self.current_color.fg = color;
+				self.current_color.special = color;
+			},
+			ChBgColor(color) => {
+				let mut color = color;
+				color.combine_bright_bit(self.current_color.bg.bright_bit());
+				self.current_color.bg = color;
+			},
+			Bright => {
+				self.current_color.fg.combine_bright_bit(Color::BRIGHT_BIT);
+				self.current_color.special.combine_bright_bit(Color::BRIGHT_BIT);
+			},
+			Dark => {
+				self.current_color.fg.combine_bright_bit(0);
+				self.current_color.special.combine_bright_bit(0);
+			},
+			Italic => self.current_attr.set_italic(CharAttr::ITALIC),
+			UnderScore => self.current_attr.set_underscore(CharAttr::UNDERSCORE),
+			Blinking => self.current_attr.set_blinking(CharAttr::BLINKING),
+			Invert => self.current_attr.set_inverted(CharAttr::INVERTED),
+			StrikeThrough => self.current_attr.set_crossed(CharAttr::CROSSED),
+			Reset => {
+				self.current_attr = CharAttr::default();
+				self.current_color = CharColor::default();
+			},
+			FirstPos => {
+				self.cursor_x = 0;
+				self.cursor_y = self.real_screen_pos;
+			},
+			LastPos => {
+				self.cursor_x = WIDTH - 1;
+				self.cursor_y = self.real_screen_pos + self.height - 1;
+			},
+			CurUp => self.cursor_y -= 1,
+			CurDown => self.cursor_y += 1,
+			CurRight => self.cursor_x += 1,
+			CurLeft => self.cursor_x -= 1,
+			Nothing => {},
 
 		}
 
@@ -226,9 +282,9 @@ impl CharColor {
 	pub const fn default() -> Self {
 
 		Self{
-			fg: FullColor::LightGrey,
-			bg: FullColor::Black,
-			special: FullColor::LightGrey,
+			fg: Color::BRIGHT_GREY,
+			bg: Color::BLACK,
+			special: Color::BRIGHT_GREY,
 		}
 	}
 
@@ -236,10 +292,56 @@ impl CharColor {
 
 impl CharAttr {
 
+	pub const ITALIC: u8 =     0b00001;
+	pub const UNDERSCORE: u8 = 0b00010;
+	pub const BLINKING: u8 =   0b00100;
+	pub const INVERTED: u8 =   0b01000;
+	pub const CROSSED: u8 =    0b10000;
+
 	/// get default char attr with updated flag
 	pub const fn default() -> Self {
 
 		Self(0b00000000)
+	}
+
+	/// use `ITALIC` constant or zero
+	pub fn set_italic(&mut self, bit: u8) {
+
+		self.0 &= 0b11110;
+		self.0 |= bit;
+
+	}
+
+	/// use `UNDERSCORE` constant or zero
+	pub fn set_underscore(&mut self, bit: u8) {
+
+		self.0 &= 0b11101;
+		self.0 |= bit;
+
+	}
+
+	/// use `BLINKING` constant or zero
+	pub fn set_blinking(&mut self, bit: u8) {
+
+		self.0 &= 0b11011;
+		self.0 |= bit;
+
+	}
+
+	/// use `INVERTED` constant or zero
+	pub fn set_inverted(&mut self, bit: u8) {
+
+		self.0 &= 0b10111;
+		self.0 |= bit;
+
+	}
+
+	/// use `CROSSED` constant or zero
+	pub fn set_crossed(&mut self, bit: u8) {
+
+		self.0 &= 0b01111;
+		self.0 |= bit;
+
 	}
 
 }
