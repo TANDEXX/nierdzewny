@@ -14,10 +14,7 @@ unsafe impl GlobalAlloc for Alloc {
 	unsafe fn alloc(&self, _layout: Layout) -> *mut u8 {
 		null_mut()
 	}
-
-	unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {
-
-	}
+	unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {}
 
 }
 
