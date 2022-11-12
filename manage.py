@@ -289,7 +289,7 @@ if cont and display_help:
 # displaying version
 if cont and display_version:
 
-	print(term_color(regular_text_color) + "nierdzewny:	version 0.6, original author and currently only is `TANDEX` (name Jonatan), licence: `open source`")
+	print(term_color(regular_text_color) + "nierdzewny:	version 0.7, original author and currently only is `TANDEX` (name Jonatan), licence: `open source`")
 	print("manage.py script:	listed version is the same as nierdzewny, author the same too, licence: same as whole project")
 
 	cont = False
