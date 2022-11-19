@@ -1,11 +1,11 @@
 #!/bin/python3
 # script designed for linux, it won't work properly on windows, should work on mac'os
-import sys, getopt, os, os.path, subprocess
+import sys, getopt, os, os.path, subprocess, shutil
 
 # constants to modify if you want or need to:
 boot_name = "nierdzewny-0.7"
 tab_size = 2
-color_term = True # won't work on windows
+color_term = True
 log_info_color = "0;1;34"
 log_warn_color = "0;1;33"
 log_err_color = "0;1;31"
@@ -32,6 +32,22 @@ display_help = False
 display_version = False
 wrong_options = []
 
+def nop():
+
+	# just to do some operation
+	nop = True
+
+
+# make following directory tree if not exists
+def mkdirs(dirs):
+
+	for dir in dirs:
+		try:
+			os.mkdir(dir)
+		except OSError as _:
+			nop()
+
+
 # function to quickly run commands/subprocesses, put "exit code " at end of fail_message because it also adds exit code
 def run_comm(args, fail_message_tabs, fail_message):
 
@@ -42,6 +58,7 @@ def run_comm(args, fail_message_tabs, fail_message):
 		print(log(fail_message_tabs, "err", fail_message + str(process.returncode)))
 		return False
 	return True
+
 
 # must be directory obviously, these paths on output that don't end with slash are files
 def tree(dir):
@@ -61,6 +78,35 @@ def tree(dir):
 
 	return list
 
+
+# destination must be absolute path, yes this code is very ugly
+def copy_tree(src, dst):
+
+	try:
+		os.makedirs(".cache/copy tree fn/" + src)
+	except OSError as _:
+		nop()
+	try:
+		os.rmdir(".cache/copy tree fn/" + src)
+	except OSError as _:
+		try:
+			os.unlink(".cache/copy tree fn/" + src)
+		except OSError as _:
+			nop()
+	os.symlink(dst, ".cache/copy tree fn/" + src)
+
+	for object in tree(src):
+
+		try:
+			if object[len(object) - 1] == "/":
+				os.mkdir(".cache/copy tree fn/" + object)
+			else:
+				shutil.copy2(object, ".cache/copy tree fn/" + object)
+		except OSError as _:
+			nop()
+
+
+# used by log function
 def term_color(color):
 	if color_term:
 		return "\x1b[" + color + "m"
@@ -68,6 +114,7 @@ def term_color(color):
 	return ""
 
 
+# log infos, errors, etc
 def log(tabs, type, msg):
 	outs = ""
 
@@ -155,7 +202,7 @@ def conf(file):
 	return (fsg, fsn, fsv)
 
 
-# saves last modify time for all source files
+# saves last modify time for all source files, don't have use for now or ever
 def save_src_modified_time():
 	smt = open(ppath + ".cache/smt.txt", "w")
 	data = ""
@@ -185,20 +232,26 @@ while rpath[z] != '/':
 sname = rpath[z + 1:len(rpath)]
 ppath = pwd + '/' + rpath[0:z+1]
 
-
 # preparing for log function
 tab = ""
 for a in range(0, tab_size):
 	tab = tab + " "
 
 
-# creating .cache and prepearing project (it does it's work only when needed)
-#if not os.path.exists(ppath + ".cache/"):
-#	os.mkdir(ppath + ".cache/")
+ creating .cache and prepearing project (it does it's work only when needed)
+if not os.path.exists(ppath + ".cache/"):
+	os.mkdir(ppath + ".cache/")
 
 #if not os.path.exists(ppath + ".cache/smt.txt")
 #	save_src_modified_time()
 #save_src_modified_time()
+
+# creating out/ directory tree
+for object in ["out/build/boot/objects", "out/image/iso/boot"]:
+	try:
+		os.makedirs(ppath + object)
+	except OSError as _:
+		nop()
 
 # parsing arguments
 try:
@@ -299,14 +352,7 @@ if cont and display_version:
 if cont and clean != "no":
 	print(log(0, "info", "cleaning builds"))
 
-	cont = run_comm(["rm", "-r", ppath + "boot/boot/rust/target"], 1, "rm command failed to remove boot/boot/rust/target directory, exit code ")
-	rm_args = ["rm", "-r", ppath + "out/build/boot/entry.o", ppath + "out/build/boot/" + boot_name, ppath + "out/img/boot/" + boot_name]
-
-	for object in os.listdir(ppath + "out/build/boot/objects"):
-		rm_args.append(ppath + "out/build/boot/objects/" + object)
-
-	if not run_comm(rm_args, 1, "rm command failed to remove some out directory content, exit code "):
-		cont = False
+	cont = run_comm(["rm", "-r", ppath + "boot/boot/rust/target", ppath + "out"], 1, "rm command failed to remove boot/boot/rust/target directory, exit code ")
 
 
 # importing modules to boot
@@ -483,7 +529,7 @@ if cont and bboot:
 # generate iso image
 if cont and gen_iso:
 	print(log(0, "info", "generating iso image"))
-	cont = run_comm(["grub-mkrescue", "-o", ppath + "out/output.iso", ppath + "out/img"], 1, "grub-mkrescue failed, exit code ")
+	cont = run_comm(["grub-mkrescue", "-o", ppath + "out/output.iso", ppath + "out/image/iso"], 1, "grub-mkrescue failed, exit code ")
 
 
 # run ritual machine (qemu)
