@@ -509,7 +509,7 @@ if cont and bboot:
 # linking boot parts
 if cont and bboot:
 	print(log(1, "info", "linking boot"))
-	link_args = ["ld", "-o", ppath + "out/build/boot/" + boot_name, ppath + "out/build/boot/entry.o"]
+	link_args = ["ld", "--gc-sections", "-o", ppath + "out/build/boot/" + boot_name, ppath + "out/build/boot/entry.o"]
 
 	for object in os.listdir(ppath + "out/build/boot/objects/"):
 
