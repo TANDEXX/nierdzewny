@@ -485,16 +485,11 @@ if cont and bboot:
 
 	cont = run_comm(["nasm", "-f", "elf64", "-o", ppath + "out/build/boot/end.o", ppath + "boot/boot/asm/" + build_arch + "/end.asm"], 2, "build failed, nasm exit code ")
 
-# copying proper rust target
-if cont and bboot:
-
-	cont = run_comm(["cp", ppath + "boot/target/" + build_arch + ".json", ppath + "boot/target.json"], 2, "target .json file copy failed, exit code ")
-
 # building rust (main) part
 if cont and bboot:
 	print(log(1, "info", "building rust part"))
 
-	cargo_args = [rh + "cargo", "build"]
+	cargo_args = [rh + "cargo", "build", "--target", ppath + "boot/target/" + build_arch + ".json"]
 	if build_profile == "release":
 		cargo_args.append("--release")
 	os.chdir(ppath + "boot/boot/rust")
@@ -515,7 +510,7 @@ if cont and bboot:
 
 		link_args.append(ppath + "out/build/boot/objects/" + object)
 
-	link_args.append(ppath + "boot/boot/rust/target/target/" + build_profile_dir + "/libboot.a")
+	link_args.append(ppath + "boot/boot/rust/target/" + build_arch + "/" + build_profile_dir + "/libboot.a")
 	link_args.append(ppath + "out/build/boot/end.o")
 	cont = run_comm(link_args, 2, "link failed, ld exit code ")
 
