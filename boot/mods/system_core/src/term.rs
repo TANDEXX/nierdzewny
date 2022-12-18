@@ -1,6 +1,8 @@
 #!/bin/nano
 //! terminal implementations
 
+pub static mut SAFETY_TERM: &dyn Term = &Empty{};
+
 pub trait Term {
 
 	/// it should start painting thread to paint all changes and start listening to keyboard
@@ -32,7 +34,7 @@ impl Term for Empty {
 
 	fn set_active(&mut self) {}
 	fn set_unactive(&mut self) {}
-	fn write_byte(_byte: u8) {
+	fn write_byte(&mut self, _byte: u8) {
 		panic!("tried to write on unset terminal")
 	}
 
