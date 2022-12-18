@@ -96,12 +96,13 @@ def copy_tree(src, dst):
 	os.symlink(dst, ".cache/copy tree fn/" + src)
 
 	for object in tree(src):
+		object_dst = dst + object[len(src):len(object)]
 
 		try:
 			if object[len(object) - 1] == "/":
-				os.mkdir(".cache/copy tree fn/" + object)
+				os.mkdir(object_dst)
 			else:
-				shutil.copy2(object, ".cache/copy tree fn/" + object)
+				shutil.copy2(object, object_dst)
 		except OSError as _:
 			nop()
 
@@ -238,7 +239,7 @@ for a in range(0, tab_size):
 	tab = tab + " "
 
 
- creating .cache and prepearing project (it does it's work only when needed)
+#	creating .cache and prepearing project (it does it's work only when needed)
 if not os.path.exists(ppath + ".cache/"):
 	os.mkdir(ppath + ".cache/")
 
@@ -523,13 +524,13 @@ if cont and bboot:
 # copying done build to image directory
 if cont and bboot:
 
-	cont = run_comm(["cp", ppath + "out/build/boot/" + boot_name, ppath + "out/img/boot/" + boot_name], 2, "failed to copy done build to image directory, cp exit code ")
+	cont = run_comm(["cp", ppath + "out/build/boot/" + boot_name, ppath + "out/img/iso/boot/" + boot_name], 2, "failed to copy done build to image directory, cp exit code ")
 
 
 # generate iso image
 if cont and gen_iso:
 	print(log(0, "info", "generating iso image"))
-	cont = run_comm(["grub-mkrescue", "-o", ppath + "out/output.iso", ppath + "out/image/iso"], 1, "grub-mkrescue failed, exit code ")
+	cont = run_comm(["grub-mkrescue", "-o", ppath + "out/output.iso", ppath + "out/img/iso"], 1, "grub-mkrescue failed, exit code ")
 
 
 # run ritual machine (qemu)
