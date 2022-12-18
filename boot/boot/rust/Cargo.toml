@@ -2,7 +2,7 @@
 [package]
 name = "boot"
 version = "0.7.0"
-authors = ["TANDEX"]
+authors = ["TANDEX <tandex.tandex@proton.me>"]
 edition = "2018"
 description = "rust (main) boot part for nierdzewny operating system"
 
@@ -16,18 +16,12 @@ pic8259_simple = "0.2.0"
 
 [profile.dev]
 opt-level = 2
-debug = true
 overflow-checks = false
-lto = false
 panic = "abort"
-incremental = true
-codegen-units = 256
 
 [profile.release]
+strip = "symbols"
 opt-level = 3
-debug = false
 overflow-checks = false
-lto = false
 panic = "abort"
-incremental = false
 codegen-units = 8
