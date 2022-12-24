@@ -72,68 +72,44 @@ pub fn end_exec() -> ! {
 
 }
 
-pub fn outb(port: u16, data: u8) {
+pub unsafe fn outb(port: u16, data: u8) {
 
-	unsafe {
-
-		asm!("out dx, al", in("dx") port, in("al") data);
-
-	}
+	asm!("out dx, al", in("dx") port, in("al") data);
 
 }
 
-pub fn outw(port: u16, data: u16) {
+pub unsafe fn outw(port: u16, data: u16) {
 
-	unsafe {
-
-		asm!("out dx, ax", in("dx") port, in("ax") data);
-
-	}
+	asm!("out dx, ax", in("dx") port, in("ax") data);
 
 }
 
-pub fn outd(port: u16, data: u32) {
+pub unsafe fn outd(port: u16, data: u32) {
 
-	unsafe {
-
-		asm!("out dx, eax", in("dx") port, in("eax") data);
-
-	}
+	asm!("out dx, eax", in("dx") port, in("eax") data);
 
 }
 
-pub fn inb(port: u16) -> u8 {
+pub unsafe fn inb(port: u16) -> u8 {
 	let output: u8;
 
-	unsafe {
-
-		asm!("in al, dx", in("dx") port, out("al") output);
-
-	}
+	asm!("in al, dx", in("dx") port, out("al") output);
 
 	output
 }
 
-pub fn inw(port: u16) -> u16 {
+pub unsafe fn inw(port: u16) -> u16 {
 	let output: u16;
 
-	unsafe {
-
-		asm!("in ax, dx", in("dx") port, out("ax") output);
-
-	}
+	asm!("in ax, dx", in("dx") port, out("ax") output);
 
 	output
 }
 
-pub fn ind(port: u16) -> u32 {
+pub unsafe fn ind(port: u16) -> u32 {
 	let output: u32;
 
-	unsafe {
-
-		asm!("in eax, dx", in("dx") port, out("eax") output);
-
-	}
+	asm!("in eax, dx", in("dx") port, out("eax") output);
 
 	output
 }

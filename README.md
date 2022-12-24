@@ -1,3 +1,6 @@
+### WARNING
+this version is not complete, go to releases for working one
+
 ## about
 this is my operating system writen in rust.
 I write it for fun, but I have some interesting ideas to make

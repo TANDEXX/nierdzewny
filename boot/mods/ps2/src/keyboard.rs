@@ -353,10 +353,10 @@ fn command_send(comm: u8, data: u8, send_data: bool) {
 
 fn can_write() -> bool {
 
-	inb(0x64) & 0b10 == 0
+	unsafe {inb(0x64) & 0b10 == 0}
 }
 
 fn can_read() -> bool {
 
-	inb(0x64) & 1 != 0
+	unsafe {inb(0x64) & 1 != 0}
 }
